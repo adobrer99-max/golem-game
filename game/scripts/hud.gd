@@ -75,12 +75,12 @@ func say(text: String, seconds := 3.5) -> void:
 
 
 func refresh(lives: int, saved: int, total: int, following: int, golem_holding: bool, stamina: float, hidden: bool) -> void:
-	var t := "Lives  %s\nNeighbours safe  %d / %d" % ["●".repeat(lives) + "○".repeat(maxi(0, 3 - lives)), saved, total]
+	var t := "Lives  %d / 3\nNeighbours safe  %d / %d" % [lives, saved, total]
 	if following > 0:
 		t += "   (%d with you)" % following
 	t += "\nGolem: %s   [G]" % ("holding this spot" if golem_holding else "following you")
 	if hidden:
-		t += "\nHidden — move or press E to come out"
+		t += "\nHidden. Move or press E to come out"
 	info.text = t
 	stamina_bar.size.x = 160.0 * stamina
 	stamina_bar.color = Color(0.65, 0.94, 0.44) if stamina > 0.25 else Color(1, 0.45, 0.3)

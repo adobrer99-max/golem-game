@@ -164,7 +164,7 @@ func interact() -> void:
 			n.state = Neighbour.S.FOLLOWING
 			n.leader = followers.back() if followers.size() > 0 else player
 			followers.append(n)
-			hud.say("“We have to go to the river.” Your %s follows you." % ("elder" if n.speed < 60 else "neighbour"))
+			hud.say("\"We have to go to the river.\" Your %s follows you." % ("elder" if n.speed < 60 else "neighbour"))
 			return
 	var here := level.cell_of(player.global_position)
 	for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:

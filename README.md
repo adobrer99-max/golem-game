@@ -8,6 +8,10 @@ A top-down medieval Jewish adventure game made in Godot 4. On the night a mob co
 
 ## How to play it
 
+**In your browser:** [adamdobrer.ca/projects/golem/app/](https://adamdobrer.ca/projects/golem/app/) (needs a keyboard).
+
+**In Godot:**
+
 1. Install **Godot 4.3 or newer** (the standard version, not .NET) from [godotengine.org](https://godotengine.org/download).
 2. Download this repo (Code → Download ZIP) and unzip it.
 3. Open Godot, click **Import**, and pick `game/project.godot`.
@@ -65,6 +69,8 @@ The whole town is the text file `game/levels/level1.txt`: one character per 16×
 | `game/scripts/neighbour.gd` | Hiding by a door, following you, boarding the boat |
 | `game/scripts/hud.gd` | On-screen info, messages, intro and ending screens |
 | `game/art/` | Sprite Studio exports (animations, hit areas, origin points) |
+
+To make a new browser version, run `godot --headless --path . --export-release "Web" ../build/web/index.html` from the `game` folder (it needs Godot's export templates, from Editor → Manage Export Templates). The site copies it in with its `tools/update_golem.py`.
 
 `game/tests/playtest.gd` plays through the main rules automatically: patrols, calling a neighbour, getting caught, hiding, the Golem's shove, and winning. Run it from the `game` folder with `godot --headless --path . -s res://tests/playtest.gd`.
 
