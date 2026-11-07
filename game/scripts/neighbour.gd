@@ -6,6 +6,7 @@ enum S { HIDING, FOLLOWING, SAVED }
 
 var state := S.HIDING
 var leader: Node2D
+var home := Vector2.ZERO
 var speed := 62.0
 var repath := 0.0
 var prompt: Label
@@ -23,6 +24,14 @@ func _ready() -> void:
 	prompt.add_theme_constant_override("outline_size", 4)
 	add_child(prompt)
 	make_light(0.25, 0.5, Color(1.0, 0.9, 0.7)).position = Vector2(0, -8)
+
+
+## Caught on Normal and Hard: they run back to their doorway and hide again.
+func go_home() -> void:
+	state = S.HIDING
+	global_position = home
+	facing = Vector2.DOWN
+	path = PackedVector2Array()
 
 
 func _physics_process(delta: float) -> void:

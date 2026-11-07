@@ -5,6 +5,8 @@ extends Actor
 const SPEED := 46.0
 const REACH := 30.0
 
+var rest := 1.0          # seconds between shoves (set by the difficulty)
+var knockdown := 3.5     # how long a shoved mob member stays down
 var holding := false
 var hold_pos := Vector2.ZERO
 var shove_cooldown := 0.0
@@ -55,7 +57,7 @@ func _shove(mob: Mob) -> void:
 	animate(false, "shove")
 	sprite.frame = 0
 	shoving = 0.45
-	shove_cooldown = 1.0
+	shove_cooldown = rest
 	get_tree().create_timer(0.15).timeout.connect(_hit)
 
 
@@ -72,4 +74,4 @@ func _hit() -> void:
 		if global_position.distance_to(m.global_position) < REACH + 4 and (m.global_position - global_position).dot(facing) > 0:
 			hit[m] = true
 	for m in hit:
-		m.stun(global_position)
+		m.stun(global_position, knockdown)

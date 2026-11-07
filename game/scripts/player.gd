@@ -5,6 +5,7 @@ const WALK := 58.0
 const SPRINT := 92.0
 
 var stamina := 1.0
+var stamina_drain := 0.45
 var sprinting := false
 var in_hiding := false
 var safe_time := 0.0       # after being caught, a moment where nobody can grab you
@@ -38,7 +39,7 @@ func _physics_process(delta: float) -> void:
 		return
 	var v := Input.get_vector("left", "right", "up", "down")
 	sprinting = Input.is_action_pressed("sprint") and v != Vector2.ZERO and stamina > 0.02
-	stamina = clampf(stamina + (-0.45 if sprinting else 0.22) * delta, 0.0, 1.0)
+	stamina = clampf(stamina + (-stamina_drain if sprinting else 0.22) * delta, 0.0, 1.0)
 	velocity = v * (SPRINT if sprinting else WALK)
 	if v != Vector2.ZERO:
 		facing = v

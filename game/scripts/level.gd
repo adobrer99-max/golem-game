@@ -183,21 +183,33 @@ func path(from: Vector2, to: Vector2) -> PackedVector2Array:
 		a = nearest_open(a)
 	if not astar.is_in_boundsv(b):
 		return PackedVector2Array()
+	var target_solid := astar.is_point_solid(b)
+	if target_solid:
+		b = nearest_open(b, from)   # e.g. a barrel: walk to the free tile next to it
 	var p := astar.get_point_path(a, b, true)
 	for i in p.size():
 		p[i] += Vector2(0, 4)
-	if p.size() > 0 and not astar.is_point_solid(b):
+	if p.size() > 0 and not target_solid:
 		p[p.size() - 1] = to   # finish exactly on the target
 	return p
 
 
-func nearest_open(c: Vector2i) -> Vector2i:
+## The closest free tile to c, preferring the side nearest `toward` when given.
+func nearest_open(c: Vector2i, toward := Vector2.INF) -> Vector2i:
 	for r in range(1, 4):
+		var best := c
+		var bd := INF
 		for dy in range(-r, r + 1):
 			for dx in range(-r, r + 1):
 				var n := c + Vector2i(dx, dy)
 				if astar.is_in_boundsv(n) and not astar.is_point_solid(n):
-					return n
+					var d := 0.0 if toward == Vector2.INF else center(n).distance_to(toward)
+					d += Vector2(dx, dy).length() * 4.0
+					if d < bd:
+						bd = d
+						best = n
+		if best != c:
+			return best
 	return c
 
 

@@ -6,11 +6,17 @@ extends Actor
 enum S { PATROL, CHASE, SEARCH, RETURN, STUNNED }
 
 const PATROL_SPEED := 32.0
-const CHASE_SPEED := 64.0
 const SEARCH_SPEED := 44.0
-const VIEW := 92.0
 const HALF_ANGLE := 0.66        # radians either side of where they face
 const RAYS := 11
+
+# set by the difficulty (see DIFFICULTY in main.gd)
+var view := 92.0
+var chase_speed := 64.0
+var give_up := 2.5
+var alert_rate := 1.0
+var checks_hiding_spots := false
+var id := ""
 
 var state := S.PATROL
 var start := Vector2.ZERO
@@ -75,8 +81,8 @@ func _physics_process(delta: float) -> void:
 	var player: Player = main.player
 	var sees := can_see(player)
 	if sees:
-		var closeness := 1.0 - clampf(global_position.distance_to(player.global_position) / VIEW, 0.0, 1.0)
-		alert = minf(1.0, alert + delta * (0.9 + 3.0 * closeness))
+		var closeness := 1.0 - clampf(global_position.distance_to(player.global_position) / view, 0.0, 1.0)
+		alert = minf(1.0, alert + delta * (0.9 + 3.0 * closeness) * alert_rate)
 		last_seen = player.global_position
 	else:
 		alert = maxf(0.0, alert - delta * 0.35)
@@ -100,14 +106,14 @@ func _physics_process(delta: float) -> void:
 				moving = move_along(PATROL_SPEED)
 		S.CHASE:
 			lost_time = 0.0 if sees else lost_time + delta
-			if lost_time > 2.5:
+			if lost_time > give_up:
 				state = S.SEARCH
 				search_time = 4.0
 			else:
 				if repath <= 0.0:
 					go_to(last_seen)
 					repath = 0.3
-				moving = move_along(CHASE_SPEED)
+				moving = move_along(chase_speed)
 				if global_position.distance_to(player.global_position) < 11.0:
 					main.player_caught(self)
 		S.SEARCH:
@@ -117,6 +123,9 @@ func _physics_process(delta: float) -> void:
 				if repath <= 0.0 and global_position.distance_to(last_seen) > 6.0:
 					go_to(last_seen)
 					repath = 1.0
+				# on Normal and Hard they check barrels and hay carts near where they lost you
+				if checks_hiding_spots and player.in_hiding and global_position.distance_to(player.global_position) < 24.0:
+					main.player_caught(self, "They found you hiding!")
 				search_time -= delta
 				look_time -= delta
 				if look_time <= 0.0:
@@ -144,7 +153,7 @@ func can_see(player: Player) -> bool:
 	var eye := global_position + Vector2(0, -10)
 	var to := player.global_position + Vector2(0, -6)
 	var d := eye.distance_to(to)
-	if d > VIEW:
+	if d > view:
 		return false
 	if player.in_hiding:
 		# hiding only works if they didn't watch you climb in
@@ -173,9 +182,9 @@ func hear(pos: Vector2) -> void:
 	repath = 1.0
 
 
-func stun(from: Vector2) -> void:
+func stun(from: Vector2, seconds := 3.5) -> void:
 	state = S.STUNNED
-	stun_time = 3.5
+	stun_time = seconds
 	alert = 0.0
 	velocity = (global_position - from).normalized() * 160.0
 
@@ -192,7 +201,7 @@ func _update_cone() -> void:
 	var base := facing.angle()
 	for i in RAYS:
 		var a := base - HALF_ANGLE + 2.0 * HALF_ANGLE * i / (RAYS - 1)
-		var world_end: Vector2 = level.ray_end(global_position + eye, global_position + eye + Vector2.from_angle(a) * VIEW)
+		var world_end: Vector2 = level.ray_end(global_position + eye, global_position + eye + Vector2.from_angle(a) * view)
 		pts.append(world_end - global_position)
 	cone.polygon = pts
 	var c := Color(1.0, 0.25, 0.2, 0.22) if state == S.CHASE else Color(1.0, 0.82, 0.4, 0.10 + 0.14 * alert)

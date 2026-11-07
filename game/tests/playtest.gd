@@ -11,7 +11,7 @@ func _initialize() -> void:
 	main = load("res://main.tscn").instantiate()
 	root.add_child(main)
 	await frames(2)
-	print("mobs=", main.mobs.size(), " neighbours=", main.neighbours.size(), " map=", main.level.width, "x", main.level.height, " exits=", main.level.exits.size())
+	print("difficulty=", main.difficulty, " mobs=", main.mobs.size(), " neighbours=", main.neighbours.size(), " map=", main.level.width, "x", main.level.height, " exits=", main.level.exits.size())
 	print("routes: ", main.mobs.map(func(m): return m.route.size()))
 	main.start()
 	var before = main.mobs.map(func(m): return m.global_position)
@@ -73,7 +73,8 @@ func _initialize() -> void:
 	# the Golem shoves a chasing mob
 	main.player.global_position = main.level.spot(Vector2i(27, 13))
 	main.golem.global_position = main.level.spot(Vector2i(27, 14))
-	var m3 = main.mobs[2]
+	var m3 = main.mobs.filter(func(x): return x.id == "3")[0]
+	main.golem.shove_cooldown = 0.0
 	m3.global_position = main.level.spot(Vector2i(27, 16))
 	m3.state = Mob.S.CHASE
 	m3.last_seen = main.player.global_position

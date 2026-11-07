@@ -74,8 +74,8 @@ func say(text: String, seconds := 3.5) -> void:
 	message_time = seconds
 
 
-func refresh(lives: int, saved: int, total: int, following: int, golem_holding: bool, stamina: float, hidden: bool) -> void:
-	var t := "Lives  %d / 3\nNeighbours safe  %d / %d" % [lives, saved, total]
+func refresh(lives: int, max_lives: int, saved: int, total: int, following: int, golem_holding: bool, stamina: float, hidden: bool) -> void:
+	var t := "Lives  %d / %d\nNeighbours safe  %d / %d" % [lives, max_lives, saved, total]
 	if following > 0:
 		t += "   (%d with you)" % following
 	t += "\nGolem: %s   [G]" % ("holding this spot" if golem_holding else "following you")

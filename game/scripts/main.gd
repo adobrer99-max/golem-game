@@ -11,6 +11,20 @@ const SPRITES := {
 	"elder": "res://art/elder/elder.tscn",
 }
 
+# Easy is the first version of the game. Normal and Hard add three more patrols, and make the mob
+# see further, notice you faster, chase harder and check hiding places. The Golem shoves less often,
+# and when you're caught your neighbours scatter back to their doorways.
+const DIFFICULTY := {
+	"Easy":   {"view": 92.0, "alert": 1.0, "chase": 64.0, "give_up": 2.5, "golem_rest": 1.0, "knockdown": 3.5, "lives": 3,
+		"scatter": false, "extra_mobs": false, "check_hiding": false, "hearing": 100.0, "stamina_drain": 0.45},
+	"Normal": {"view": 112.0, "alert": 1.5, "chase": 70.0, "give_up": 3.5, "golem_rest": 1.8, "knockdown": 2.6, "lives": 3,
+		"scatter": true, "extra_mobs": true, "check_hiding": true, "hearing": 125.0, "stamina_drain": 0.55},
+	"Hard":   {"view": 126.0, "alert": 2.0, "chase": 76.0, "give_up": 4.5, "golem_rest": 2.6, "knockdown": 1.8, "lives": 2,
+		"scatter": true, "extra_mobs": true, "check_hiding": true, "hearing": 150.0, "stamina_drain": 0.7},
+}
+
+var difficulty: String = Engine.get_meta("golem_difficulty", "Normal")   # remembered across restarts
+var diff: Dictionary
 var level: Level
 var player: Player
 var golem: Golem
@@ -63,6 +77,7 @@ func _ready() -> void:
 	for id in level.mobs:
 		var m := _spawn(Mob.new(), "mob", level.mobs[id], actors) as Mob
 		m.start = m.global_position
+		m.id = id
 		for p in level.patrols.get(id, []):
 			if level.points.has(p):
 				m.route.append(level.spot(level.points[p]))
@@ -73,14 +88,21 @@ func _ready() -> void:
 	if body:
 		body.area_entered.connect(_on_player_touched)
 
+	for nb in neighbours:
+		nb.home = nb.global_position
 	hud = Hud.new()
 	add_child(hud)
+	_show_intro()
+
+
+func _show_intro() -> void:
 	hud.show_screen("Golem",
 		"Night. A rumour has spread through the town, and a crowd with torches is moving on the Jewish quarter.\n\n" +
 		"Before he fled, the old rabbi woke the Golem.\n" +
 		"Find your neighbours hiding in their doorways and lead them to the boat at the river gate.\n\n" +
 		"Stay out of the torchlight. Hide in barrels and hay carts. The Golem will hold them back, but it cannot be everywhere.\n\n" +
-		"Move  WASD / arrows      Run  Shift (they'll hear you)\nE  call a neighbour, hide      G  Golem: hold here / follow\n\nPress Enter to begin")
+		"Move  WASD / arrows      Run  Shift (they'll hear you)\nE  call a neighbour, hide      G  Golem: hold here / follow\n\n" +
+		"Difficulty:  %s     (press 1 Easy, 2 Normal, 3 Hard)\n\nPress Enter to begin" % difficulty)
 
 
 func _spawn(a: Actor, sprite: String, cell: Vector2i, parent: Node, radius := 5.0) -> Actor:
@@ -122,6 +144,10 @@ func _setup_input() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("confirm") and state == "intro":
 		start()
+	elif state == "intro" and event is InputEventKey and event.pressed and not event.echo and event.physical_keycode in [KEY_1, KEY_2, KEY_3]:
+		difficulty = ["Easy", "Normal", "Hard"][event.physical_keycode - KEY_1]
+		Engine.set_meta("golem_difficulty", difficulty)
+		_show_intro()
 	elif event.is_action_pressed("restart") or (event.is_action_pressed("confirm") and state in ["won", "lost"]):
 		get_tree().reload_current_scene()
 	elif state == "play":
@@ -133,6 +159,22 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func start() -> void:
+	diff = DIFFICULTY[difficulty]
+	lives = diff.lives
+	for m in mobs.duplicate():
+		if not diff.extra_mobs and int(m.id) > 5:
+			mobs.erase(m)
+			m.cone.queue_free()
+			m.queue_free()
+			continue
+		m.view = diff.view
+		m.alert_rate = diff.alert
+		m.chase_speed = diff.chase
+		m.give_up = diff.give_up
+		m.checks_hiding_spots = diff.check_hiding
+	golem.rest = diff.golem_rest
+	golem.knockdown = diff.knockdown
+	player.stamina_drain = diff.stamina_drain
 	state = "play"
 	hud.hide_screen()
 	hud.say("Find your neighbours. Press E next to them.", 5.0)
@@ -141,7 +183,7 @@ func start() -> void:
 func _physics_process(_delta: float) -> void:
 	if state == "play" and player.sprinting:
 		for m in mobs:
-			if m.global_position.distance_to(player.global_position) < 100.0:
+			if m.global_position.distance_to(player.global_position) < diff.hearing:
 				m.hear(player.global_position)
 	var on_exit := level.is_exit(level.cell_of(player.global_position))
 	if state == "play" and on_exit:
@@ -152,7 +194,7 @@ func _physics_process(_delta: float) -> void:
 			hud.say("You can't leave yet. Some of your neighbours are still hiding in the quarter.")
 	if not on_exit:
 		told_exit = false
-	hud.refresh(lives, saved, neighbours.size(), followers.size(), golem.holding, player.stamina, player.in_hiding)
+	hud.refresh(lives, diff.get("lives", 3), saved, neighbours.size(), followers.size(), golem.holding, player.stamina, player.in_hiding)
 
 
 func interact() -> void:
@@ -207,7 +249,7 @@ func _on_player_touched(area: Area2D) -> void:
 		player_caught(who)
 
 
-func player_caught(_by: Mob) -> void:
+func player_caught(_by: Mob, why := "They caught you!") -> void:
 	if state != "play" or player.safe_time > 0.0:
 		return
 	lives -= 1
@@ -216,7 +258,13 @@ func player_caught(_by: Mob) -> void:
 		hud.show_screen("Caught", "They caught you too many times.\n\nPress Enter to try again.")
 		return
 	state = "caught"
-	hud.say("They caught you! You break free and run back to the synagogue.", 3.0)
+	if diff.scatter and followers.size() > 0:
+		hud.say(why + " You break free, but your neighbours scatter back into hiding.", 4.0)
+		for n in followers:
+			n.go_home()
+		followers.clear()
+	else:
+		hud.say(why + " You break free and run back to the synagogue.", 3.0)
 	await get_tree().create_timer(1.2).timeout
 	player.unhide()
 	player.global_position = level.spot(level.player_start)
