@@ -1,0 +1,541 @@
+{
+  "image": "golem-sheet.png",
+  "frameWidth": 24,
+  "frameHeight": 24,
+  "columns": 4,
+  "rows": 9,
+  "origin": {
+    "x": 12,
+    "y": 23
+  },
+  "animations": {
+    "idle_down": {
+      "fps": 2,
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 24,
+          "h": 24,
+          "durationMs": 500,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        }
+      ]
+    },
+    "walk_down": {
+      "fps": 5,
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 24,
+          "w": 24,
+          "h": 24,
+          "durationMs": 200,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        },
+        {
+          "x": 24,
+          "y": 24,
+          "w": 24,
+          "h": 24,
+          "durationMs": 200,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        },
+        {
+          "x": 48,
+          "y": 24,
+          "w": 24,
+          "h": 24,
+          "durationMs": 200,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        },
+        {
+          "x": 72,
+          "y": 24,
+          "w": 24,
+          "h": 24,
+          "durationMs": 200,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        }
+      ]
+    },
+    "shove_down": {
+      "fps": 10,
+      "loop": false,
+      "frames": [
+        {
+          "x": 0,
+          "y": 48,
+          "w": 24,
+          "h": 24,
+          "durationMs": 100,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        },
+        {
+          "x": 24,
+          "y": 48,
+          "w": 24,
+          "h": 24,
+          "durationMs": 100,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            },
+            {
+              "kind": "attack",
+              "x": 1,
+              "y": 14,
+              "w": 22,
+              "h": 10
+            }
+          ]
+        },
+        {
+          "x": 48,
+          "y": 48,
+          "w": 24,
+          "h": 24,
+          "durationMs": 100,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            },
+            {
+              "kind": "attack",
+              "x": 1,
+              "y": 14,
+              "w": 22,
+              "h": 10
+            }
+          ]
+        },
+        {
+          "x": 72,
+          "y": 48,
+          "w": 24,
+          "h": 24,
+          "durationMs": 100,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        }
+      ]
+    },
+    "idle_up": {
+      "fps": 2,
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 72,
+          "w": 24,
+          "h": 24,
+          "durationMs": 500,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        }
+      ]
+    },
+    "walk_up": {
+      "fps": 5,
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 96,
+          "w": 24,
+          "h": 24,
+          "durationMs": 200,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        },
+        {
+          "x": 24,
+          "y": 96,
+          "w": 24,
+          "h": 24,
+          "durationMs": 200,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        },
+        {
+          "x": 48,
+          "y": 96,
+          "w": 24,
+          "h": 24,
+          "durationMs": 200,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        },
+        {
+          "x": 72,
+          "y": 96,
+          "w": 24,
+          "h": 24,
+          "durationMs": 200,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        }
+      ]
+    },
+    "shove_up": {
+      "fps": 10,
+      "loop": false,
+      "frames": [
+        {
+          "x": 0,
+          "y": 120,
+          "w": 24,
+          "h": 24,
+          "durationMs": 100,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        },
+        {
+          "x": 24,
+          "y": 120,
+          "w": 24,
+          "h": 24,
+          "durationMs": 100,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            },
+            {
+              "kind": "attack",
+              "x": 1,
+              "y": 0,
+              "w": 22,
+              "h": 12
+            }
+          ]
+        },
+        {
+          "x": 48,
+          "y": 120,
+          "w": 24,
+          "h": 24,
+          "durationMs": 100,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            },
+            {
+              "kind": "attack",
+              "x": 1,
+              "y": 0,
+              "w": 22,
+              "h": 12
+            }
+          ]
+        },
+        {
+          "x": 72,
+          "y": 120,
+          "w": 24,
+          "h": 24,
+          "durationMs": 100,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        }
+      ]
+    },
+    "idle_side": {
+      "fps": 2,
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 144,
+          "w": 24,
+          "h": 24,
+          "durationMs": 500,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        }
+      ]
+    },
+    "walk_side": {
+      "fps": 5,
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 168,
+          "w": 24,
+          "h": 24,
+          "durationMs": 200,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        },
+        {
+          "x": 24,
+          "y": 168,
+          "w": 24,
+          "h": 24,
+          "durationMs": 200,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        },
+        {
+          "x": 48,
+          "y": 168,
+          "w": 24,
+          "h": 24,
+          "durationMs": 200,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        },
+        {
+          "x": 72,
+          "y": 168,
+          "w": 24,
+          "h": 24,
+          "durationMs": 200,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        }
+      ]
+    },
+    "shove_side": {
+      "fps": 10,
+      "loop": false,
+      "frames": [
+        {
+          "x": 0,
+          "y": 192,
+          "w": 24,
+          "h": 24,
+          "durationMs": 100,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        },
+        {
+          "x": 24,
+          "y": 192,
+          "w": 24,
+          "h": 24,
+          "durationMs": 100,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            },
+            {
+              "kind": "attack",
+              "x": 12,
+              "y": 4,
+              "w": 12,
+              "h": 16
+            }
+          ]
+        },
+        {
+          "x": 48,
+          "y": 192,
+          "w": 24,
+          "h": 24,
+          "durationMs": 100,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            },
+            {
+              "kind": "attack",
+              "x": 12,
+              "y": 4,
+              "w": 12,
+              "h": 16
+            }
+          ]
+        },
+        {
+          "x": 72,
+          "y": 192,
+          "w": 24,
+          "h": 24,
+          "durationMs": 100,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 5,
+              "y": 9,
+              "w": 14,
+              "h": 15
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
