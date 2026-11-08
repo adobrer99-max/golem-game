@@ -8,6 +8,7 @@ func frames(n: int) -> void:
 		await physics_frame
 
 func _initialize() -> void:
+	Engine.set_meta("golem_chapter", 1)   # Chapter 1: The Quarter
 	main = load("res://main.tscn").instantiate()
 	root.add_child(main)
 	await frames(2)

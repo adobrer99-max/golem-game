@@ -8,6 +8,7 @@ const SPRITES := {
 	"mob": "res://art/mob/mob.tscn",
 	"neighbour": "res://art/neighbour/neighbour.tscn",
 	"elder": "res://art/elder/elder.tscn",
+	"rabbi": "res://art/rabbi/rabbi.tscn",
 }
 const PROGRESS_FILE := "user://progress.cfg"
 
@@ -44,6 +45,12 @@ var state := "title"     # title, intro, play, caught, won, lost
 var lives := 3
 var saved := 0
 var told_exit := false
+# chapter tasks (the prologue): overhear the plotters, dig clay
+var listen: Dictionary = {}
+var listen_time := 0.0
+var lines_heard := 0
+var clay_needed := 0
+var clay_dug := 0
 
 
 func _ready() -> void:
@@ -76,8 +83,11 @@ func _ready() -> void:
 	var actors := Node2D.new()
 	actors.y_sort_enabled = true
 	add_child(actors)
-	player = _spawn(Player.new(), "player", level.player_start, actors) as Player
-	golem = _spawn(Golem.new(), "golem", level.golem_start, actors, 7.0) as Golem
+	player = _spawn(Player.new(), ch.get("player", "player"), level.player_start, actors) as Player
+	if level.golem_start_set:   # the prologue happens before there is a Golem
+		golem = _spawn(Golem.new(), "golem", level.golem_start, actors, 7.0) as Golem
+	listen = ch.get("listen", {})
+	clay_needed = level.clay.size()
 	for n in level.neighbours:
 		var nb := _spawn(Neighbour.new(), n[1], n[0], actors) as Neighbour
 		nb.home = nb.global_position
@@ -158,7 +168,14 @@ func _setup_input() -> void:
 # ---------------------------------------------------------------- screens
 
 func _chapter_label(i: int) -> String:
-	return "Chapter %d: %s" % [i + 1, story.chapters[i].name]
+	var c: Dictionary = story.chapters[i]
+	if c.has("label"):
+		return "%s: %s" % [c.label, c.name]
+	var n := 0
+	for j in i + 1:
+		if not story.chapters[j].has("label"):
+			n += 1
+	return "Chapter %d: %s" % [n, c.name]
 
 
 func _show_title() -> void:
@@ -208,7 +225,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif state == "play":
 		if event.is_action_pressed("interact"):
 			interact()
-		elif event.is_action_pressed("golem"):
+		elif event.is_action_pressed("golem") and golem:
 			golem.toggle_hold()
 			hud.say("The Golem stands guard here." if golem.holding else "The Golem follows you.")
 
@@ -231,8 +248,9 @@ func start() -> void:
 		m.chase_speed = diff.chase
 		m.give_up = diff.give_up
 		m.checks_hiding_spots = diff.check_hiding
-	golem.rest = diff.golem_rest
-	golem.knockdown = diff.knockdown
+	if golem:
+		golem.rest = diff.golem_rest
+		golem.knockdown = diff.knockdown
 	player.stamina_drain = diff.stamina_drain
 	state = "play"
 	hud.hide_screen()
@@ -246,16 +264,61 @@ func _physics_process(_delta: float) -> void:
 		for m in mobs:
 			if m.global_position.distance_to(player.global_position) < diff.hearing:
 				m.hear(player.global_position)
+	if state == "play":
+		_listen(_delta)
 	var on_exit := level.is_exit(level.cell_of(player.global_position))
 	if state == "play" and on_exit:
-		if saved == neighbours.size():
+		if saved == neighbours.size() and tasks_done():
 			win()
 		elif not told_exit and followers.is_empty():
 			told_exit = true
 			hud.say(ch.not_yet)
 	if not on_exit:
 		told_exit = false
-	hud.refresh(lives, diff.lives, saved, neighbours.size(), followers.size(), golem.holding, player.stamina, player.in_hiding)
+	hud.refresh(lives, diff.get("lives", 3), _hud_lines(), player.stamina, player.in_hiding)
+
+
+func tasks_done() -> bool:
+	return (listen.is_empty() or lines_heard >= listen.lines.size()) and clay_dug >= clay_needed
+
+
+func _hud_lines() -> Array:
+	var lines := []
+	if neighbours.size() > 0:
+		lines.append("Neighbours safe  %d / %d" % [saved, neighbours.size()] + ("   (%d with you)" % followers.size() if followers.size() > 0 else ""))
+	if not listen.is_empty():
+		var done: bool = lines_heard >= listen.lines.size()
+		lines.append(listen.label + ("  - done" if done else "  %d / %d" % [lines_heard, listen.lines.size()]))
+	if clay_needed > 0:
+		lines.append("River clay  %d / %d" % [clay_dug, clay_needed] + ("  - done" if clay_dug >= clay_needed else ""))
+	if ch.has("return_label") and tasks_done():
+		lines.append(ch.return_label)
+	if golem:
+		lines.append("Golem: %s   [G]" % ("holding this spot" if golem.holding else "following you"))
+	return lines
+
+
+## Stand near the plotters (or hide right by them) and you hear the plan, line by line.
+func _listen(delta: float) -> void:
+	if listen.is_empty() or lines_heard >= listen.lines.size():
+		return
+	var near := false
+	for c in level.listen_spots:
+		if level.center(c).distance_to(player.global_position) < listen.get("radius", 40.0):
+			near = true
+	for m in mobs:
+		if m.state == Mob.S.CHASE:
+			near = false
+	if not near:
+		return
+	listen_time += delta
+	var due := mini(listen.lines.size(), int(listen_time / listen.seconds_per_line))
+	if due > lines_heard:
+		lines_heard = due
+		hud.say(listen.lines[lines_heard - 1], listen.seconds_per_line + 0.6)
+		if lines_heard == listen.lines.size():
+			await get_tree().create_timer(listen.seconds_per_line + 0.6).timeout
+			hud.say(listen.done, 6.0)
 
 
 func _follow(n: Neighbour) -> void:
@@ -275,6 +338,13 @@ func interact() -> void:
 			hud.say(ch.found % who if "%s" in ch.found else ch.found)
 			return
 	var here := level.cell_of(player.global_position)
+	for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		var c: Vector2i = here + d
+		if c in level.clay and level.center(c).distance_to(player.global_position) < 22.0:
+			level.dig(c)
+			clay_dug += 1
+			hud.say(ch.get("dug", "You dig.") + "  (%d / %d)" % [clay_dug, clay_needed])
+			return
 	for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 		var c: Vector2i = here + d
 		if level.is_hiding_spot(c) and level.center(c).distance_to(player.global_position) < 22.0:
@@ -338,8 +408,9 @@ func player_caught(_by: Mob, why := "They caught you!") -> void:
 	for n in followers:
 		i += 1
 		n.global_position = player.global_position + Vector2(-12 * i, 6)
-	golem.global_position = player.global_position + Vector2(16, 0)
-	golem.holding = false
+	if golem:
+		golem.global_position = player.global_position + Vector2(16, 0)
+		golem.holding = false
 	for m in mobs:
 		m.reset()
 	player.safe_time = 2.0

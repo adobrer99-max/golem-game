@@ -97,6 +97,17 @@ func _physics_process(delta: float) -> void:
 				velocity = Vector2.ZERO
 			else:
 				var target := route[route_i] if route.size() > 0 else start
+				if route.size() <= 1 and global_position.distance_to(target) < 4.0:
+					# a mob member with no route stands still and looks around now and then
+					velocity = Vector2.ZERO
+					look_time -= delta
+					if look_time <= 0.0:
+						facing = [Vector2.DOWN, Vector2.LEFT, Vector2.UP, Vector2.RIGHT][randi() % 4]
+						look_time = randf_range(1.6, 3.2)
+					animate(false)
+					_update_cone()
+					mark.text = "?" if alert > 0.25 else ""
+					return
 				if global_position.distance_to(target) < 4.0:
 					route_i = (route_i + 1) % maxi(1, route.size())
 					repath = 0.0

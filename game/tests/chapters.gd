@@ -19,9 +19,9 @@ func _initialize() -> void:
 		var with_you = main.followers.size()
 		await frames(120)
 		var walked = main.mobs.filter(func(m): return m.global_position.distance_to(m.start) > 16).size()
-		print("Chapter %d %s: map %dx%d, neighbours %d (with you at start %d), mobs %d (%d walking), exits %d, opens on %s" % [
-			i + 1, story.chapters[i].name, main.level.width, main.level.height, main.neighbours.size(), with_you,
-			main.mobs.size(), walked, main.level.exits.size(), start_state])
+		print("%s: map %dx%d, neighbours %d (with you at start %d), mobs %d (%d walking), exits %d, opens on %s, golem %s" % [
+			main._chapter_label(i), main.level.width, main.level.height, main.neighbours.size(), with_you,
+			main.mobs.size(), walked, main.level.exits.size(), start_state, main.golem != null])
 		# nobody should spot you in the first two seconds
 		print("  safe start: ", main.lives == main.diff.lives and main.state == "play")
 		# play it through: collect anyone hiding, then go to the way out
@@ -30,6 +30,18 @@ func _initialize() -> void:
 			if n.state == 0:
 				main.player.global_position = n.global_position + Vector2(0, 12)
 				main.interact()
+		if not main.listen.is_empty() or main.clay_needed > 0:
+			# going back early shouldn't finish the chapter
+			main.player.global_position = main.nearest_exit(main.player.global_position)
+			await frames(10)
+			var early = main.state
+			main.player.global_position = main.level.spot(main.level.listen_spots[0])
+			await frames(int(60 * main.listen.seconds_per_line * main.listen.lines.size()) + 20)
+			print("  overheard ", main.lines_heard, " / ", main.listen.lines.size(), " lines")
+			for c in main.level.clay.duplicate():
+				main.player.global_position = main.level.spot(c)
+				main.interact()
+			print("  clay dug ", main.clay_dug, " / ", main.clay_needed, ";  stepping back early finished it: ", early != "play")
 		var gate = main.nearest_exit(main.player.global_position)
 		main.player.global_position = gate
 		for n in main.followers: n.global_position = gate + Vector2(-30, 0)

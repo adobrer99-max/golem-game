@@ -2,10 +2,44 @@
   "title": "Golem",
   "chapters": [
     {
+      "label": "Prologue",
+      "name": "The Rabbi",
+      "map": "level0.txt",
+      "player": "rabbi",
+      "night": [
+        0.36,
+        0.36,
+        0.52
+      ],
+      "intro": "The third night of Hanukkah, early evening. You are the rabbi of the quarter.\n\nAll day there have been whispers in the market. Now men are gathering outside the tavern across the square.\n\nSlip out through the quarter gate and listen to what they're planning, without being seen. A barrel by the tavern wall would hide you well.\n\nThen go down to the riverbank. The old books say a guardian can be made from river clay.",
+      "goal": "Go through the quarter gate and listen to the men outside the tavern.",
+      "listen": {
+        "label": "Overhear the plan",
+        "seconds_per_line": 2.5,
+        "radius": 40,
+        "lines": [
+          "\"...when the bells ring midnight. Bring torches.\"",
+          "\"They say a boy went missing near their wall.\"",
+          "\"The baker's boy? He turned up at his uncle's this morning.\"",
+          "\"Doesn't matter. People are angry. We start at the synagogue.\""
+        ],
+        "done": "You've heard enough. Midnight. Now the clay: three loads from the riverbank."
+      },
+      "dug": "You dig a load of cold, wet river clay.",
+      "return_label": "Go back to the synagogue",
+      "not_yet": "Not yet. You still need to hear their plan and bring back the clay.",
+      "found": "",
+      "outro": "In the synagogue attic, by candlelight, you and your student shape the clay into the form of a man, three times as tall as either of you.\n\nSeven times you walk around it, saying the old words. Then you write on its forehead: emet, truth.\n\nIts eyes open.\n\nThe bells are already ringing. \"Take it,\" you tell your student. \"Get everyone to the boat. I'll warn the far end of the quarter.\""
+    },
+    {
       "name": "The Quarter",
       "map": "level1.txt",
-      "night": [0.30, 0.32, 0.48],
-      "intro": "The third night of Hanukkah. A rumour has spread through the town, and a crowd with torches is moving on the Jewish quarter.\n\nBefore he fled, the old rabbi woke the Golem. The elder has the synagogue's Torah scroll.\nFind your neighbours hiding in their doorways and lead them to the boat at the river gate.\n\nStay out of the torchlight. Hide in barrels and hay carts. The Golem will hold them back, but it cannot be everywhere.",
+      "night": [
+        0.3,
+        0.32,
+        0.48
+      ],
+      "intro": "Midnight. A crowd with torches is moving on the Jewish quarter.\n\nYou are the rabbi's student. He has gone to warn the far end of the quarter and left the Golem with you. The elder has the synagogue's Torah scroll.\nFind your neighbours hiding in their doorways and lead them to the boat at the river gate.\n\nStay out of the torchlight. Hide in barrels and hay carts. The Golem will hold them back, but it cannot be everywhere.",
       "goal": "Find your neighbours. Press E next to them.",
       "not_yet": "You can't leave yet. Some of your neighbours are still hiding in the quarter.",
       "found": "\"We have to go to the river.\" Your %s follows you.",
@@ -14,7 +48,11 @@
     {
       "name": "The Mill Road",
       "map": "level2.txt",
-      "night": [0.27, 0.30, 0.46],
+      "night": [
+        0.27,
+        0.3,
+        0.46
+      ],
       "intro": "The boat can't go any further: the town watch is out on the bridge. You land below the old mill.\n\nBeyond the mill yard and the fields is the forest road. Men from the town are searching the farms with lanterns.\n\nKeep everyone together and get them to the trees. If they catch you, the others will scatter and hide, and you'll have to gather them again.",
       "goal": "Lead everyone across the fields to the forest edge.",
       "not_yet": "Not everyone is with you. Go back for them.",
@@ -24,7 +62,11 @@
     {
       "name": "The Forest",
       "map": "level3.txt",
-      "night": [0.20, 0.23, 0.38],
+      "night": [
+        0.2,
+        0.23,
+        0.38
+      ],
       "intro": "Rivka is somewhere in the forest, and searchers with torches are walking the road.\n\nFind her, then lead everyone to the gate of the next town, where the Jewish community has promised to take you in.\n\nThe paths are narrow. Hide in the bushes.",
       "goal": "Find Rivka. Then lead everyone to the town gate.",
       "not_yet": "You can't go in without Rivka.",

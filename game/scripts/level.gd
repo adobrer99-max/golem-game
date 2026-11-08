@@ -5,11 +5,11 @@ extends Node2D
 
 const TILE := 16
 enum T { STREET, DIRT, GRASS, ROOF, HOUSE_WALL, DOOR, WINDOW, BARREL, HAY, WATER, DOCK, GATE,
-	STONE_TOP, STONE_FRONT, WELL, TREE, SYN_ROOF, SYN_WALL, CRATES, WINDOW_LIGHTS, SYN_STAR, SYN_MENORAH, BUSH, WAY_OUT }
+	STONE_TOP, STONE_FRONT, WELL, TREE, SYN_ROOF, SYN_WALL, CRATES, WINDOW_LIGHTS, SYN_STAR, SYN_MENORAH, BUSH, WAY_OUT, CLAY }
 const SOLID := [T.ROOF, T.HOUSE_WALL, T.DOOR, T.WINDOW, T.WATER, T.STONE_TOP, T.STONE_FRONT,
 	T.WELL, T.TREE, T.SYN_ROOF, T.SYN_WALL, T.CRATES, T.WINDOW_LIGHTS, T.SYN_STAR, T.SYN_MENORAH]
 const HIDING := [T.BARREL, T.HAY, T.BUSH]
-const MARKERS := "PgNEFQX123456789abcdefhijklmnopqrsuvxyz"
+const MARKERS := "PgNEFQXZ123456789abcdefhijklmnopqrsuvxyz"
 
 var width := 0
 var height := 0
@@ -21,7 +21,10 @@ var mobs: Dictionary = {}             # "1" -> cell
 var points: Dictionary = {}           # "b" -> cell
 var patrols: Dictionary = {}          # "1" -> ["b", "c"]
 var exits: Array[Vector2i] = []
-var lit_windows: Array[Vector2i] = []   # windows with a Hanukkah menorah (L), which glow at night
+var lit_windows: Array[Vector2i] = []
+var clay: Array[Vector2i] = []          # river clay to dig (Y)
+var listen_spots: Array[Vector2i] = []  # where you can overhear the plotters (Z)
+var golem_start_set := false   # windows with a Hanukkah menorah (L), which glow at night
 var astar := AStarGrid2D.new()
 var tilemap: TileMapLayer
 
@@ -51,7 +54,11 @@ func load_map(path: String) -> void:
 			var cell := Vector2i(x, y)
 			match ch:
 				"P": player_start = cell
-				"g": golem_start = cell
+				"g":
+					golem_start = cell
+					golem_start_set = true
+				"Y": clay.append(cell)
+				"Z": listen_spots.append(cell)
 				"N": neighbours.append([cell, "neighbour", false])
 				"E": neighbours.append([cell, "elder", false])
 				"F": neighbours.append([cell, "neighbour", true])
@@ -80,12 +87,17 @@ func _tile_for(ch: String, x: int, y: int, rows: Array[String]) -> int:
 		"=": return T.DOCK
 		"X":
 			# the way out: the river gate on a dock, a lantern on a path anywhere else
+			var around := ""
 			for d in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
-				if _ch(rows, x + d.x, y + d.y) == "=":
-					return T.GATE
-			return T.WAY_OUT
+				around += _ch(rows, x + d.x, y + d.y)
+			if "=" in around:
+				return T.GATE
+			if "," in around or "\"" in around:
+				return T.WAY_OUT
+			return T.STREET   # in town, the way out is just marked by its lantern light
 		"B": return T.BARREL
 		"K": return T.BUSH
+		"Y": return T.CLAY
 		"H": return T.HAY
 		"C": return T.CRATES
 		"O": return T.WELL
@@ -155,6 +167,13 @@ func build(tiles_texture: Texture2D) -> void:
 		shape.shape = rect
 		shape.position = r.position + r.size / 2.0
 		edge.add_child(shape)
+
+
+## Dig up a patch of clay: it turns to bare earth.
+func dig(c: Vector2i) -> void:
+	clay.erase(c)
+	cells[c.y][c.x] = T.DIRT
+	tilemap.set_cell(c, 0, Vector2i(T.DIRT, 0))
 
 
 func tile_at(c: Vector2i) -> int:

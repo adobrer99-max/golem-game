@@ -8,6 +8,7 @@ func frames(n: int) -> void:
 
 func run(level_name: String) -> void:
 	Engine.set_meta("golem_difficulty", level_name)
+	Engine.set_meta("golem_chapter", 1)   # Chapter 1: The Quarter
 	var main = load("res://main.tscn").instantiate()
 	root.add_child(main)
 	await frames(2)

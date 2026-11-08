@@ -75,14 +75,15 @@ func say(text: String, seconds := 3.5) -> void:
 	message_time = seconds
 
 
-func refresh(lives: int, max_lives: int, saved: int, total: int, following: int, golem_holding: bool, stamina: float, hidden: bool) -> void:
-	var t := "Lives  %d / %d\nNeighbours safe  %d / %d" % [lives, max_lives, saved, total]
-	if following > 0:
-		t += "   (%d with you)" % following
-	t += "\nGolem: %s   [G]" % ("holding this spot" if golem_holding else "following you")
+func refresh(lives: int, max_lives: int, lines: Array, stamina: float, hidden: bool) -> void:
+	var t := "Lives  %d / %d" % [lives, max_lives]
+	for l in lines:
+		t += "\n" + l
 	if hidden:
 		t += "\nHidden. Move or press E to come out"
 	info.text = t
+	stamina_back.position.y = info.position.y + info.get_minimum_size().y + 4
+	stamina_bar.position.y = stamina_back.position.y
 	stamina_bar.size.x = 160.0 * stamina
 	stamina_bar.color = Color(0.65, 0.94, 0.44) if stamina > 0.25 else Color(1, 0.45, 0.3)
 

@@ -2,15 +2,16 @@
 
 A top-down medieval Jewish adventure game made in Godot 4. On the third night of Hanukkah, a mob comes for the Jewish quarter of an invented town, and you and the Golem have to get your neighbours out to the boat at the river gate.
 
-**Status:** playable start to finish: three chapters, placeholder art.
+**Status:** playable start to finish: a prologue and three chapters, placeholder art.
 
 ## The story
 
-1. **The Quarter.** The third night of Hanukkah. A mob is coming for the Jewish quarter. Before he fled, the old rabbi woke the Golem. Find your neighbours and get them to the boat at the river gate.
+0. **Prologue: The Rabbi.** Early evening, the third night of Hanukkah. Playing as the rabbi, slip out of the quarter, overhear the men plotting outside the tavern (a barrel by the wall hides you while you listen), dig three loads of river clay past the night watch, and bring it back to the synagogue, where the Golem is made.
+1. **The Quarter.** Midnight. A mob is coming for the Jewish quarter. You're the rabbi's student, left with the Golem. Find your neighbours and get them to the boat at the river gate.
 2. **The Mill Road.** The boat can't get past the town bridge, so you land below the old mill. Keep everyone together across the mill yard and the fields, past the searchers, to the forest edge.
 3. **The Forest.** Little Rivka has run off into the trees. Find her, then lead everyone to the gate of the next town, where the Jewish community will take you in.
 
-All the story text, chapter names and goals are in `game/levels/chapters.json`. Edit it to change the story, or add a chapter by adding an entry and a map. The art is placeholder, made to be redrawn in [Sprite Studio](https://github.com/adobrer99-max/sprite-studio).
+All the story text, chapter names and goals are in `game/levels/chapters.json`. Edit it to change the story, or add a chapter by adding an entry and a map. A chapter can set who you play (`player`), what you overhear (`listen`) and what's said when you dig or come back early. A map with no `g` has no Golem. The art is placeholder, made to be redrawn in [Sprite Studio](https://github.com/adobrer99-max/sprite-studio).
 
 ![The intro screen](docs/intro.png)
 
@@ -65,6 +66,7 @@ Pick it on the start screen. The game remembers your choice until you close it.
 | Lives | 3 | 3 | 2 |
 
 All the numbers are in `DIFFICULTY` at the top of `game/scripts/main.gd`.
+![Prologue: the rabbi hides in a barrel by the tavern to overhear the plan](docs/prologue.png)
 ![Outside the synagogue with the elder, who carries the Torah scroll](docs/neighbour.png)
 ![Chapter 2: landing below the mill](docs/mill-road.png)
 ![Chapter 3: the forest](docs/forest.png)
@@ -84,7 +86,7 @@ Save your redrawn `.sprite.json` back into `art-source/` too, so you can keep ed
 
 ## Changing the maps
 
-Each chapter's map is a text file in `game/levels/` (`level1.txt`, `level2.txt`, `level3.txt`): one character per 16×16 tile. The legend at the bottom of the file lists them. Draw houses with `#` (the game adds the front walls), put `D` for doors (they all have a mezuzah), `w` for windows and `L` for windows with a Hanukkah menorah, `B`, `H` and `K` for hiding places (barrels, hay carts, bushes), `N` and `E` for neighbours hiding and `F` and `Q` for ones who start with you, `X` for the way out, digits for mob members and lowercase letters for their patrol points. The patrol routes are listed under `[patrols]`.
+Each chapter's map is a text file in `game/levels/` (`level0.txt` for the prologue, then `level1.txt` to `level3.txt`): one character per 16×16 tile. The legend at the bottom of the file lists them. Draw houses with `#` (the game adds the front walls), put `D` for doors (they all have a mezuzah), `w` for windows and `L` for windows with a Hanukkah menorah, `B`, `H` and `K` for hiding places (barrels, hay carts, bushes), `N` and `E` for neighbours hiding and `F` and `Q` for ones who start with you, `X` for the way out, `Z` for a spot where plotters can be overheard, `Y` for river clay to dig, digits for mob members and lowercase letters for their patrol points. The patrol routes are listed under `[patrols]`.
 
 ## How it's built
 
