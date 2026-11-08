@@ -3,12 +3,13 @@ extends Actor
 ## Someone from the mob with a torch. Walks a patrol route, looks ahead in a cone,
 ## gets suspicious, then chases. Loses you if you break line of sight or hide in time.
 
-enum S { PATROL, CHASE, SEARCH, RETURN, STUNNED }
+enum S { PATROL, CHASE, SEARCH, RETURN, STUNNED, FLEE }
 
 const PATROL_SPEED := 32.0
 const SEARCH_SPEED := 44.0
 const HALF_ANGLE := 0.66        # radians either side of where they face
 const RAYS := 11
+const CHASE_SPEED_FLEE := 80.0
 
 # set by the difficulty (see DIFFICULTY in main.gd)
 var view := 92.0
@@ -17,6 +18,9 @@ var give_up := 2.5
 var alert_rate := 1.0
 var checks_hiding_spots := false
 var id := ""
+var arrival := ""              # "" for patrols; "torch" goes for the houses (Fight); "roam" searches the lanes (Flight)
+var target_door := Vector2i(-1, -1)
+var flee_to := Vector2.ZERO
 
 var state := S.PATROL
 var start := Vector2.ZERO
@@ -72,12 +76,25 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		animate(false)
 		if stun_time <= 0.0:
-			state = S.SEARCH
-			search_time = 2.5
-			last_seen = global_position
+			if arrival == "torch":
+				# knocked down by the Golem: they've had enough, and run back the way they came
+				state = S.FLEE
+				go_to(flee_to)
+				mark.text = ""
+			else:
+				state = S.SEARCH
+				search_time = 2.5
+				last_seen = global_position
 		_update_cone()
 		return
 
+	if state == S.FLEE:
+		var moving_off := move_along(CHASE_SPEED_FLEE)
+		animate(moving_off)
+		_update_cone()
+		if not moving_off or global_position.distance_to(flee_to) < 10.0:
+			main.mob_left(self)
+		return
 	var player: Player = main.player
 	var sees := can_see(player)
 	if sees:
@@ -92,7 +109,9 @@ func _physics_process(delta: float) -> void:
 	var moving := false
 	match state:
 		S.PATROL:
-			if alert > 0.3 and sees:
+			if arrival == "torch" and not (alert > 0.3 and sees):
+				moving = _go_for_houses(delta)
+			elif alert > 0.3 and sees:
 				facing = (player.global_position - global_position).normalized()   # stops and stares
 				velocity = Vector2.ZERO
 			else:
@@ -152,12 +171,33 @@ func _physics_process(delta: float) -> void:
 				go_to(back)
 				repath = 1.5
 			moving = move_along(PATROL_SPEED)
-			if global_position.distance_to(back) < 6.0:
+			if global_position.distance_to(back) < 6.0 or arrival == "torch":
 				state = S.PATROL
 	animate(moving)
 	_update_cone()
 	mark.text = "!" if state == S.CHASE else ("?" if alert > 0.25 or state == S.SEARCH else "")
 	mark.add_theme_color_override("font_color", Color(1, 0.3, 0.25) if state == S.CHASE else Color(1, 0.9, 0.4))
+
+
+## Fight: walk to the nearest door that isn't burning yet and set it alight.
+func _go_for_houses(delta: float) -> bool:
+	if target_door == Vector2i(-1, -1) or not main.door_can_burn(target_door):
+		target_door = main.door_to_burn(global_position)
+		repath = 0.0
+		if target_door == Vector2i(-1, -1):
+			velocity = Vector2.ZERO
+			return false
+	var spot: Vector2 = level.spot(target_door + Vector2i(0, 1))
+	if global_position.distance_to(spot) < 8.0:
+		velocity = Vector2.ZERO
+		facing = Vector2.UP
+		if main.set_alight(target_door, delta):
+			target_door = Vector2i(-1, -1)
+		return false
+	if repath <= 0.0:
+		go_to(spot)
+		repath = 1.0
+	return move_along(PATROL_SPEED * 1.4)
 
 
 func can_see(player: Player) -> bool:

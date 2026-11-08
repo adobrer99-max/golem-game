@@ -2,16 +2,21 @@
 
 A top-down medieval Jewish adventure game made in Godot 4. On the third night of Hanukkah, a mob comes for the Jewish quarter of an invented town, and you and the Golem have to get your neighbours out to the boat at the river gate.
 
-**Status:** playable start to finish: a prologue and three chapters, placeholder art.
+**Status:** playable start to finish: a prologue, four chapters and two endings, placeholder art.
 
 ## The story
 
 0. **Prologue: The Rabbi.** Early evening, the third night of Hanukkah. Playing as the rabbi, slip out of the quarter, overhear the men plotting outside the tavern (a barrel by the wall hides you while you listen), dig three loads of river clay past the night watch, and bring it back to the synagogue, where the Golem is made.
 1. **The Quarter.** Midnight. A mob is coming for the Jewish quarter. You're the rabbi's student, left with the Golem. Find your neighbours and get them to the boat at the river gate.
 2. **The Mill Road.** The boat can't get past the town bridge, so you land below the old mill. Keep everyone together across the mill yard and the fields, past the searchers, to the forest edge.
-3. **The Forest.** Little Rivka has run off into the trees. Find her, then lead everyone to the gate of the next town, where the Jewish community will take you in.
+3. **The Forest.** Little Rivka has run off into the trees. Find her, then lead everyone to the gate of the village where the Jewish community will take you in. The Golem stays at the edge of the forest.
+4. **The Village.** Spring, a week before Passover. The rumour follows you, and torches come down the hill road. You choose:
+   - **Fight (F):** defend the village with the Golem. Attackers come in three waves and go for the houses with torches. Put out the fires (E next to a burning door) while the Golem drives them off; anyone it knocks down runs for good. Lose three houses and the village is lost.
+   - **Flight (L):** gather the five families from their houses and get everyone across the marsh ford while more searchers keep arriving.
 
-All the story text, chapter names and goals are in `game/levels/chapters.json`. Edit it to change the story, or add a chapter by adding an entry and a map. A chapter can set who you play (`player`), what you overhear (`listen`) and what's said when you dig or come back early. A map with no `g` has no Golem. The art is placeholder, made to be redrawn in [Sprite Studio](https://github.com/adobrer99-max/sprite-studio).
+   Each choice has its own ending.
+
+All the story text, chapter names and goals are in `game/levels/chapters.json`. Edit it to change the story, or add a chapter by adding an entry and a map. A chapter can set who you play (`player`), what you overhear (`listen`) and what's said when you dig or come back early. A map with no `g` has no Golem. A chapter with a `choice` shows a choice screen, and each option can set its own mode (`defend` or `escape`), waves of arrivals, goal, intro and ending. The art is placeholder, made to be redrawn in [Sprite Studio](https://github.com/adobrer99-max/sprite-studio).
 
 ![The intro screen](docs/intro.png)
 
@@ -70,6 +75,8 @@ All the numbers are in `DIFFICULTY` at the top of `game/scripts/main.gd`.
 ![Outside the synagogue with the elder, who carries the Torah scroll](docs/neighbour.png)
 ![Chapter 2: landing below the mill](docs/mill-road.png)
 ![Chapter 3: the forest](docs/forest.png)
+![Chapter 4: the choice](docs/choice.png)
+![Fight: a house set alight](docs/fight.png)
 ![The river gate](docs/river.png)
 
 ## Changing the art
@@ -86,7 +93,7 @@ Save your redrawn `.sprite.json` back into `art-source/` too, so you can keep ed
 
 ## Changing the maps
 
-Each chapter's map is a text file in `game/levels/` (`level0.txt` for the prologue, then `level1.txt` to `level3.txt`): one character per 16×16 tile. The legend at the bottom of the file lists them. Draw houses with `#` (the game adds the front walls), put `D` for doors (they all have a mezuzah), `w` for windows and `L` for windows with a Hanukkah menorah, `B`, `H` and `K` for hiding places (barrels, hay carts, bushes), `N` and `E` for neighbours hiding and `F` and `Q` for ones who start with you, `X` for the way out, `Z` for a spot where plotters can be overheard, `Y` for river clay to dig, digits for mob members and lowercase letters for their patrol points. The patrol routes are listed under `[patrols]`.
+Each chapter's map is a text file in `game/levels/` (`level0.txt` for the prologue, then `level1.txt` to `level3.txt`): one character per 16×16 tile. The legend at the bottom of the file lists them. Draw houses with `#` (the game adds the front walls), put `D` for doors (they all have a mezuzah), `w` for windows and `L` for windows with a Hanukkah menorah, `B`, `H` and `K` for hiding places (barrels, hay carts, bushes), `N` and `E` for neighbours hiding and `F` and `Q` for ones who start with you, `X` for the way out, `Z` for a spot where plotters can be overheard, `Y` for river clay to dig, `V` for doors the mob can set alight and `A` for where the mob arrives, digits for mob members and lowercase letters for their patrol points. The patrol routes are listed under `[patrols]`.
 
 ## How it's built
 
@@ -104,7 +111,7 @@ Each chapter's map is a text file in `game/levels/` (`level0.txt` for the prolog
 
 To make a new browser version, run `godot --headless --path . --export-release "Web" ../build/web/index.html` from the `game` folder (it needs Godot's export templates, from Editor → Manage Export Templates). The site copies it in with its `tools/update_golem.py`.
 
-`game/tests/playtest.gd` plays through the main rules automatically: patrols, calling a neighbour, getting caught, hiding, the Golem's shove, and winning. `game/tests/difficulty.gd` checks what changes between Easy, Normal and Hard, and `game/tests/chapters.gd` loads every chapter and plays it to the end. Run it from the `game` folder with `godot --headless --path . -s res://tests/playtest.gd`.
+`game/tests/playtest.gd` plays through the main rules automatically: patrols, calling a neighbour, getting caught, hiding, the Golem's shove, and winning. `game/tests/difficulty.gd` checks what changes between Easy, Normal and Hard, `game/tests/chapters.gd` loads every chapter and plays it to the end, and `game/tests/village.gd` checks the Fight/Flight choice and both paths. Run it from the `game` folder with `godot --headless --path . -s res://tests/playtest.gd`.
 
 ## Licence
 

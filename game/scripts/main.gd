@@ -51,6 +51,19 @@ var listen_time := 0.0
 var lines_heard := 0
 var clay_needed := 0
 var clay_dug := 0
+# a chapter with a choice (Fight or Flight); the chosen option's settings are merged into ch
+var choosing := false
+var mode := ""             # "defend" (Fight), "escape" (Flight) or "" for the usual
+var actors: Node2D
+# waves of arrivals: Fight sends them for the houses, Flight sends them searching the lanes
+var waves: Array = []
+var wave := 0
+var to_spawn := 0
+var spawn_timer := 0.0
+var wave_pause := 0.0
+# Fight: doors being set alight. cell -> {"heat": 0..1, "burning": bool, "burn": seconds, "lost": bool, "fire": Node2D}
+var fires: Dictionary = {}
+var houses_lost := 0
 
 
 func _ready() -> void:
@@ -61,6 +74,16 @@ func _ready() -> void:
 		unlocked = cfg.get_value("progress", "unlocked", 0)
 	chapter = clampi(chapter, 0, story.chapters.size() - 1)
 	ch = story.chapters[chapter]
+	if ch.has("choice"):
+		var picked: String = Engine.get_meta("golem_choice", "")
+		choosing = true
+		for opt in ch.choice.options:
+			if opt.key == picked:
+				ch = ch.duplicate()
+				for k in opt:
+					ch[k] = opt[k]
+				choosing = false
+	mode = ch.get("mode", "")
 	diff = DIFFICULTY[difficulty]
 	light_texture = _make_light_texture()
 	level = Level.new()
@@ -80,7 +103,7 @@ func _ready() -> void:
 	cone_layer.follow_viewport_enabled = true
 	cone_layer.layer = 1
 	add_child(cone_layer)
-	var actors := Node2D.new()
+	actors = Node2D.new()
 	actors.y_sort_enabled = true
 	add_child(actors)
 	player = _spawn(Player.new(), ch.get("player", "player"), level.player_start, actors) as Player
@@ -88,7 +111,7 @@ func _ready() -> void:
 		golem = _spawn(Golem.new(), "golem", level.golem_start, actors, 7.0) as Golem
 	listen = ch.get("listen", {})
 	clay_needed = level.clay.size()
-	for n in level.neighbours:
+	for n in (level.neighbours if mode != "defend" else []):   # in a Fight, the families shelter in the synagogue
 		var nb := _spawn(Neighbour.new(), n[1], n[0], actors) as Neighbour
 		nb.home = nb.global_position
 		if n[1] == "elder":
@@ -112,6 +135,8 @@ func _ready() -> void:
 
 	hud = Hud.new()
 	add_child(hud)
+	for c in level.doors_at_risk:
+		fires[c] = {"heat": 0.0, "burning": false, "burn": 0.0, "lost": false, "fire": null}
 	if Engine.get_meta("golem_in_game", false):
 		_show_intro()
 	else:
@@ -190,7 +215,15 @@ func _show_title() -> void:
 
 func _show_intro() -> void:
 	state = "intro"
-	hud.show_screen(_chapter_label(chapter), ch.intro + "\n\nPress Enter to begin")
+	hud.show_screen(_chapter_label(chapter), ch.intro + ("\n\nPress Enter to choose" if choosing else "\n\nPress Enter to begin"))
+
+
+func _show_choice() -> void:
+	state = "choice"
+	var t: String = ch.choice.prompt + "\n\n"
+	for opt in ch.choice.options:
+		t += "%s   %s\n%s\n\n" % [opt.key, opt.name, opt.summary]
+	hud.show_screen(ch.choice.title, t + "Press " + " or ".join(ch.choice.options.map(func(o): return o.key)))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -200,13 +233,22 @@ func _unhandled_input(event: InputEvent) -> void:
 				Engine.set_meta("golem_in_game", true)
 				_show_intro()
 			"intro":
-				start()
+				if choosing:
+					_show_choice()
+				else:
+					start()
 			"won":
 				_go_to_chapter(chapter + 1)
 			"ending":
 				Engine.set_meta("golem_in_game", false)
 				_go_to_chapter(0)
 			"lost":
+				get_tree().reload_current_scene()
+		return
+	if state == "choice" and event is InputEventKey and event.pressed and not event.echo:
+		for opt in ch.choice.options:
+			if OS.get_keycode_string(event.physical_keycode) == opt.key:
+				Engine.set_meta("golem_choice", opt.key)
 				get_tree().reload_current_scene()
 		return
 	if state == "title" and event is InputEventKey and event.pressed and not event.echo:
@@ -219,6 +261,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("menu") and state != "title":
 		Engine.set_meta("golem_in_game", false)
+		Engine.set_meta("golem_choice", "")
 		get_tree().reload_current_scene()
 	elif event.is_action_pressed("restart") and state in ["play", "lost", "caught"]:
 		get_tree().reload_current_scene()
@@ -232,6 +275,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _go_to_chapter(i: int) -> void:
 	Engine.set_meta("golem_chapter", i)
+	Engine.set_meta("golem_choice", "")
 	get_tree().reload_current_scene()
 
 
@@ -252,9 +296,15 @@ func start() -> void:
 		golem.rest = diff.golem_rest
 		golem.knockdown = diff.knockdown
 	player.stamina_drain = diff.stamina_drain
+	# waves get bigger on harder settings
+	var scale: float = {"Easy": 0.7, "Normal": 1.0, "Hard": 1.35}[difficulty]
+	waves = ch.get("waves", []).map(func(w): return {"count": maxi(1, roundi(w.count * scale)), "after": w.get("after", 0.0)})
+	wave = 0
+	to_spawn = 0
+	wave_pause = waves[0].after if waves.size() > 0 else 0.0
 	state = "play"
 	hud.hide_screen()
-	hud.say(ch.goal, 6.0)
+	hud.say(ch.get("goal", ""), 6.0)
 
 
 # ---------------------------------------------------------------- play
@@ -266,16 +316,162 @@ func _physics_process(_delta: float) -> void:
 				m.hear(player.global_position)
 	if state == "play":
 		_listen(_delta)
+		_run_waves(_delta)
+		_burn(_delta)
 	var on_exit := level.is_exit(level.cell_of(player.global_position))
-	if state == "play" and on_exit:
+	if state == "play" and on_exit and mode != "defend":
 		if saved == neighbours.size() and tasks_done():
 			win()
 		elif not told_exit and followers.is_empty():
 			told_exit = true
-			hud.say(ch.not_yet)
+			hud.say(ch.get("not_yet", "Not everyone is here yet."))
 	if not on_exit:
 		told_exit = false
 	hud.refresh(lives, diff.get("lives", 3), _hud_lines(), player.stamina, player.in_hiding)
+
+
+# ---------------------------------------------------------------- arrivals and fires
+
+func _run_waves(delta: float) -> void:
+	if wave >= waves.size():
+		if mode == "defend" and mobs.is_empty():
+			win()
+		return
+	if to_spawn == 0:
+		wave_pause -= delta
+		if wave_pause > 0.0:
+			return
+		to_spawn = waves[wave].count
+		if wave > 0 or mode == "defend":
+			hud.say(ch.get("wave_text", "More of them are coming.") + ("  (%d of %d)" % [wave + 1, waves.size()] if mode == "defend" else ""), 4.0)
+	spawn_timer -= delta
+	if spawn_timer > 0.0:
+		return
+	spawn_timer = 1.3
+	_arrive()
+	to_spawn -= 1
+	if to_spawn == 0:
+		wave += 1
+		if wave < waves.size():
+			wave_pause = waves[wave].after
+			if mode == "defend":
+				wave_pause = 99999.0   # in a Fight, the next wave comes once this one has been driven off
+
+
+func _arrive() -> void:
+	var at: Vector2i = level.arrivals[randi() % level.arrivals.size()]
+	var m := _spawn(Mob.new(), "mob", at, actors) as Mob
+	m.start = m.global_position
+	m.flee_to = m.global_position
+	m.id = "w"
+	m.view = diff.view
+	m.alert_rate = diff.alert
+	m.chase_speed = diff.chase
+	m.give_up = diff.give_up
+	m.checks_hiding_spots = diff.check_hiding
+	m.facing = Vector2.DOWN
+	if mode == "defend":
+		m.arrival = "torch"
+	else:
+		m.arrival = "roam"
+		for i in 4:
+			m.route.append(level.spot(level.random_open_cell()))
+		m.route.append(m.start)
+	mobs.append(m)
+
+
+## A knocked-down attacker has run off the map.
+func mob_left(m: Mob) -> void:
+	mobs.erase(m)
+	m.cone.queue_free()
+	m.queue_free()
+	if mode == "defend" and to_spawn == 0 and wave < waves.size() and mobs.is_empty():
+		wave_pause = 4.0
+		hud.say(ch.get("wave_cleared", "They fall back. For now."), 4.0)
+
+
+func door_can_burn(c: Vector2i) -> bool:
+	return fires.has(c) and not fires[c].lost and not fires[c].burning
+
+
+## The nearest door that isn't already burning.
+func door_to_burn(from: Vector2) -> Vector2i:
+	var best := Vector2i(-1, -1)
+	var bd := INF
+	for c in fires:
+		if door_can_burn(c) and level.center(c).distance_to(from) < bd:
+			bd = level.center(c).distance_to(from)
+			best = c
+	return best
+
+
+## An attacker holding a torch to a door. Returns true once it catches.
+func set_alight(c: Vector2i, delta: float) -> bool:
+	var f: Dictionary = fires[c]
+	f.heat += delta / 3.0
+	if f.heat < 1.0:
+		return false
+	f.burning = true
+	f.burn = 0.0
+	f.fire = _make_fire(level.center(c))
+	hud.say(ch.get("fire_text", "A house is on fire! Put it out: E next to the door."), 4.0)
+	return true
+
+
+func _burn(delta: float) -> void:
+	for c in fires:
+		var f: Dictionary = fires[c]
+		if not f.burning:
+			f.heat = maxf(0.0, f.heat - delta * 0.1)
+			continue
+		f.burn += delta
+		if f.burn > 14.0:   # too late: the house burns down
+			f.burning = false
+			f.lost = true
+			f.fire.queue_free()
+			level.set_tile(c, Level.T.BURNT)
+			houses_lost += 1
+			if houses_lost >= ch.get("houses_can_lose", 3):
+				state = "lost"
+				hud.show_screen("The village burns", ch.get("lost_text", "Too many houses burned.") + "\n\nPress Enter to try again.")
+				return
+			hud.say("A house has burned down.", 3.0)
+
+
+func _make_fire(pos: Vector2) -> Node2D:
+	var fire := Node2D.new()
+	fire.position = pos + Vector2(0, 4)
+	fire.z_index = 5
+	for i in 4:
+		var flame := Polygon2D.new()
+		flame.polygon = PackedVector2Array([Vector2(-3, 0), Vector2(0, -10), Vector2(3, 0)])
+		flame.position = Vector2(-6 + i * 4, 0)
+		flame.color = [Color(1, 0.3, 0.1), Color(1, 0.65, 0.1), Color(1, 0.9, 0.3), Color(1, 0.5, 0.1)][i]
+		fire.add_child(flame)
+	var l := PointLight2D.new()
+	l.texture = light_texture
+	l.color = Color(1, 0.5, 0.2)
+	l.energy = 1.3
+	l.texture_scale = 1.2
+	fire.add_child(l)
+	add_child(fire)
+	var t := fire.create_tween().set_loops()   # belongs to the fire, so it stops when the fire is put out
+	t.tween_property(fire, "scale", Vector2(1.1, 1.3), 0.15)
+	t.tween_property(fire, "scale", Vector2(0.95, 0.85), 0.2)
+	return fire
+
+
+func _put_out_fire() -> bool:
+	for c in fires:
+		var f: Dictionary = fires[c]
+		if f.burning and level.spot(c + Vector2i(0, 1)).distance_to(player.global_position) < 26.0:
+			f.burning = false
+			f.heat = 0.0
+			f.fire.queue_free()
+			f.fire = null
+			hud.say("You beat out the flames.", 2.5)
+			return true
+	return false
 
 
 func tasks_done() -> bool:
@@ -284,6 +480,10 @@ func tasks_done() -> bool:
 
 func _hud_lines() -> Array:
 	var lines := []
+	if mode == "defend":
+		var on_fire := fires.values().filter(func(f): return f.burning).size()
+		lines.append("Wave  %d / %d" % [mini(wave + (1 if to_spawn > 0 or not mobs.is_empty() else 0), waves.size()), waves.size()])
+		lines.append("Houses lost  %d / %d" % [houses_lost, ch.get("houses_can_lose", 3)] + ("   %d ON FIRE!" % on_fire if on_fire > 0 else ""))
 	if neighbours.size() > 0:
 		lines.append("Neighbours safe  %d / %d" % [saved, neighbours.size()] + ("   (%d with you)" % followers.size() if followers.size() > 0 else ""))
 	if not listen.is_empty():
@@ -331,11 +531,14 @@ func interact() -> void:
 	if player.in_hiding:
 		player.unhide()
 		return
+	if _put_out_fire():
+		return
 	for n in neighbours:
 		if n.state == Neighbour.S.HIDING and n.global_position.distance_to(player.global_position) < 30.0:
 			_follow(n)
 			var who := "elder" if n.speed < 60 else "neighbour"
-			hud.say(ch.found % who if "%s" in ch.found else ch.found)
+			var found: String = ch.get("found", "They come with you.")
+			hud.say(found % who if "%s" in found else found)
 			return
 	var here := level.cell_of(player.global_position)
 	for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
@@ -437,9 +640,10 @@ func win() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("progress", "unlocked", unlocked)
 	cfg.save(PROGRESS_FILE)
+	Engine.set_meta("golem_choice", "")
 	if chapter == story.chapters.size() - 1:
 		state = "ending"
-		hud.show_screen("The End", ch.outro + "\n\nThank you for playing.\n\nPress Enter to return to the title screen.")
+		hud.show_screen("The End", ch.get("outro", "") + "\n\nThank you for playing.\n\nPress Enter to return to the title screen.")
 	else:
 		state = "won"
-		hud.show_screen(_chapter_label(chapter), ch.outro + "\n\nPress Enter to continue.")
+		hud.show_screen(_chapter_label(chapter), ch.get("outro", "") + "\n\nPress Enter to continue.")

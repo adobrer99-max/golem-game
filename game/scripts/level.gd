@@ -5,11 +5,11 @@ extends Node2D
 
 const TILE := 16
 enum T { STREET, DIRT, GRASS, ROOF, HOUSE_WALL, DOOR, WINDOW, BARREL, HAY, WATER, DOCK, GATE,
-	STONE_TOP, STONE_FRONT, WELL, TREE, SYN_ROOF, SYN_WALL, CRATES, WINDOW_LIGHTS, SYN_STAR, SYN_MENORAH, BUSH, WAY_OUT, CLAY }
+	STONE_TOP, STONE_FRONT, WELL, TREE, SYN_ROOF, SYN_WALL, CRATES, WINDOW_LIGHTS, SYN_STAR, SYN_MENORAH, BUSH, WAY_OUT, CLAY, BURNT }
 const SOLID := [T.ROOF, T.HOUSE_WALL, T.DOOR, T.WINDOW, T.WATER, T.STONE_TOP, T.STONE_FRONT,
-	T.WELL, T.TREE, T.SYN_ROOF, T.SYN_WALL, T.CRATES, T.WINDOW_LIGHTS, T.SYN_STAR, T.SYN_MENORAH]
+	T.WELL, T.TREE, T.SYN_ROOF, T.SYN_WALL, T.CRATES, T.WINDOW_LIGHTS, T.SYN_STAR, T.SYN_MENORAH, T.BURNT]
 const HIDING := [T.BARREL, T.HAY, T.BUSH]
-const MARKERS := "PgNEFQXZ123456789abcdefhijklmnopqrsuvxyz"
+const MARKERS := "PgNEFQXZA123456789abcdefhijklmnopqrsuvxyz"
 
 var width := 0
 var height := 0
@@ -24,7 +24,9 @@ var exits: Array[Vector2i] = []
 var lit_windows: Array[Vector2i] = []
 var clay: Array[Vector2i] = []          # river clay to dig (Y)
 var listen_spots: Array[Vector2i] = []  # where you can overhear the plotters (Z)
-var golem_start_set := false   # windows with a Hanukkah menorah (L), which glow at night
+var golem_start_set := false
+var doors_at_risk: Array[Vector2i] = [] # doors the mob can set alight (V)
+var arrivals: Array[Vector2i] = []      # where the mob comes in (A)   # windows with a Hanukkah menorah (L), which glow at night
 var astar := AStarGrid2D.new()
 var tilemap: TileMapLayer
 
@@ -59,6 +61,8 @@ func load_map(path: String) -> void:
 					golem_start_set = true
 				"Y": clay.append(cell)
 				"Z": listen_spots.append(cell)
+				"V": doors_at_risk.append(cell)
+				"A": arrivals.append(cell)
 				"N": neighbours.append([cell, "neighbour", false])
 				"E": neighbours.append([cell, "elder", false])
 				"F": neighbours.append([cell, "neighbour", true])
@@ -102,13 +106,13 @@ func _tile_for(ch: String, x: int, y: int, rows: Array[String]) -> int:
 		"C": return T.CRATES
 		"O": return T.WELL
 		"t": return T.TREE
-		"D": return T.DOOR
+		"D", "V": return T.DOOR
 		"w": return T.WINDOW
 		"L": return T.WINDOW_LIGHTS
 		"S": return T.SYN_STAR
 		"U": return T.SYN_MENORAH
-		"#": return T.ROOF if below in ["#", "D", "w", "L"] else T.HOUSE_WALL
-		"T": return T.SYN_ROOF if below in ["T", "D", "S", "U"] else T.SYN_WALL
+		"#": return T.ROOF if below in ["#", "D", "V", "w", "L"] else T.HOUSE_WALL
+		"T": return T.SYN_ROOF if below in ["T", "D", "V", "S", "U"] else T.SYN_WALL
 		"W": return T.STONE_TOP if below == "W" else T.STONE_FRONT
 	if ch != " " and ch != "X" and ch in MARKERS:
 		# people and patrol points stand on whatever ground is around them
@@ -167,6 +171,20 @@ func build(tiles_texture: Texture2D) -> void:
 		shape.shape = rect
 		shape.position = r.position + r.size / 2.0
 		edge.add_child(shape)
+
+
+func set_tile(c: Vector2i, t: int) -> void:
+	cells[c.y][c.x] = t
+	tilemap.set_cell(c, 0, Vector2i(t, 0))
+
+
+## Any open tile, picked at random (for searchers wandering the lanes).
+func random_open_cell() -> Vector2i:
+	for i in 200:
+		var c := Vector2i(randi() % width, randi() % height)
+		if not astar.is_point_solid(c):
+			return c
+	return player_start
 
 
 ## Dig up a patch of clay: it turns to bare earth.

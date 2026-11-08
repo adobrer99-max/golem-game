@@ -71,7 +71,75 @@
       "goal": "Find Rivka. Then lead everyone to the town gate.",
       "not_yet": "You can't go in without Rivka.",
       "found": "Rivka! She takes your hand and doesn't let go.",
-      "outro": "At first light the gate opens, and the community takes you in, Torah and all.\n\nThe Golem stops at the edge of the trees. You remember what the rabbi said: the word on its forehead is emet, truth. Wipe away the first letter and it reads met, dead.\n\nThe clay giant kneels so you can reach. When the sun is up, there is only a mound of river clay at the edge of the forest."
+      "outro": "At first light the village gate opens, and the little community there takes you in, Torah and all.\n\nThe Golem won't fit through a village gate. It stays at the edge of the forest, standing among the trees like an old stump, and every evening you walk out to see it.\n\nYou remember what the rabbi said: the word on its forehead is emet, truth. Wipe away the first letter and it reads met, dead.\n\nYou can't bring yourself to do it. Not yet."
+    },
+    {
+      "name": "The Village",
+      "map": "level4.txt",
+      "night": [
+        0.26,
+        0.28,
+        0.44
+      ],
+      "intro": "Spring. Passover is a week away, and the village has made room for all of you.\n\nBut peddlers on the road bring news from the town: the story about the quarter has followed you here. One evening the church bell rings out of time, and you see torches coming down the hill road.\n\nThe village elders look at you, and at the Golem waiting at the edge of the forest.",
+      "choice": {
+        "title": "Fight, or flight?",
+        "prompt": "There isn't much time. What do you do?",
+        "options": [
+          {
+            "key": "F",
+            "name": "Fight",
+            "summary": "Stand with the Golem and defend the village. The families shelter in the synagogue.",
+            "mode": "defend",
+            "intro": "You stay.\n\nThe families shelter in the synagogue, and you and the Golem stand in the lanes.\n\nThe mob will come in waves, going for the houses with torches. Beat out the fires before the houses burn down, and let the Golem drive them off: anyone it knocks down runs for good.\n\nLose three houses and the village is lost.",
+            "goal": "Defend the village. Put out fires: E next to a burning door.",
+            "waves": [
+              {
+                "count": 4,
+                "after": 3
+              },
+              {
+                "count": 6
+              },
+              {
+                "count": 8
+              }
+            ],
+            "houses_can_lose": 3,
+            "wave_text": "Torches on the road. Here they come.",
+            "wave_cleared": "They fall back up the hill. Not for long.",
+            "fire_text": "A house is on fire! Put it out: E next to the door.",
+            "lost_text": "The fires spread faster than you can beat them out, and the village is lost.",
+            "outro": "By dawn the torches have gone back up the hill road. The village is scorched, but it stands.\n\nThe Golem doesn't stop. It walks the lanes, still looking for someone to fight, and when it tears the village gate off its hinges, the elders look at you.\n\nYou reach up to its forehead. Emet becomes met, and the Golem falls into a heap of river clay in the middle of the road.\n\nWhatever comes next, the village will face it with its own hands."
+          },
+          {
+            "key": "L",
+            "name": "Flight",
+            "summary": "Leave. Gather the families and cross the marsh before the mob arrives.",
+            "mode": "escape",
+            "intro": "You leave.\n\nFive families are hiding in their houses, waiting for word. Gather them, then lead everyone south to the ford across the marsh.\n\nThe mob is coming down the hill road and along the east road, and more arrive all the time. They'll search the lanes.",
+            "goal": "Gather the families and lead them to the ford (south-west).",
+            "not_yet": "Not everyone is here. Go back for them.",
+            "found": "\"Is it time?\" Your %s comes with you.",
+            "waves": [
+              {
+                "count": 2,
+                "after": 4
+              },
+              {
+                "count": 3,
+                "after": 30
+              },
+              {
+                "count": 3,
+                "after": 30
+              }
+            ],
+            "wave_text": "More torches on the road.",
+            "outro": "On the far side of the marsh, someone counts heads, and this time nobody is missing.\n\nBehind you, the Golem stands in the ford alone, holding the way. The torches gather around it, and then the fog comes down.\n\nIn the morning there is only river clay on the bank, and the marks of a struggle. You never learn how many it turned back."
+          }
+        ]
+      }
     }
   ]
 }

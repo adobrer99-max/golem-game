@@ -11,6 +11,7 @@ func _initialize() -> void:
 	for i in story.chapters.size():
 		Engine.set_meta("golem_chapter", i)
 		Engine.set_meta("golem_in_game", true)
+		Engine.set_meta("golem_choice", "L" if story.chapters[i].has("choice") else "")   # Flight; tests/village.gd covers Fight
 		var main = load("res://main.tscn").instantiate()
 		root.add_child(main)
 		await frames(2)
