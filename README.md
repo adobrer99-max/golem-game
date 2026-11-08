@@ -2,7 +2,15 @@
 
 A top-down medieval Jewish adventure game made in Godot 4. On the third night of Hanukkah, a mob comes for the Jewish quarter of an invented town, and you and the Golem have to get your neighbours out to the boat at the river gate.
 
-**Status:** first playable version. One town, four neighbours to rescue, and up to eight torch-carrying mob members on patrol. The art is placeholder, made to be redrawn in [Sprite Studio](https://github.com/adobrer99-max/sprite-studio).
+**Status:** playable start to finish: three chapters, placeholder art.
+
+## The story
+
+1. **The Quarter.** The third night of Hanukkah. A mob is coming for the Jewish quarter. Before he fled, the old rabbi woke the Golem. Find your neighbours and get them to the boat at the river gate.
+2. **The Mill Road.** The boat can't get past the town bridge, so you land below the old mill. Keep everyone together across the mill yard and the fields, past the searchers, to the forest edge.
+3. **The Forest.** Little Rivka has run off into the trees. Find her, then lead everyone to the gate of the next town, where the Jewish community will take you in.
+
+All the story text, chapter names and goals are in `game/levels/chapters.json`. Edit it to change the story, or add a chapter by adding an entry and a map. The art is placeholder, made to be redrawn in [Sprite Studio](https://github.com/adobrer99-max/sprite-studio).
 
 ![The intro screen](docs/intro.png)
 
@@ -25,19 +33,21 @@ A top-down medieval Jewish adventure game made in Godot 4. On the third night of
 | Shift | Run. Faster, but any mob nearby hears you |
 | E or Space | Call a neighbour to follow you · hide in a barrel or hay cart · come out again |
 | G | Tell the Golem to hold its spot, or to follow you again |
-| 1 / 2 / 3 | On the start screen: Easy, Normal or Hard |
+| 1 / 2 / 3 | On the title screen: Easy, Normal or Hard |
+| C | On the title screen: choose a chapter you've reached |
 | Enter | Start · play again |
-| R | Restart |
+| R | Restart the chapter |
+| Esc | Back to the title screen |
 
 ## The rules
 
 - Mob members walk set routes. The pale cone in front of each one is what they can see.
 - If you stay in a cone, a **?** appears and fills up. At **!** they chase you. Get out of sight for a few seconds and they give up, search, then go back to their route.
 - Running makes noise. Anyone close by comes to look.
-- Hiding in a barrel or hay cart makes you invisible, unless they watched you climb in. Neighbours following you can't hide with you.
+- Hiding in a barrel, hay cart or bush makes you invisible, unless they watched you climb in. Neighbours following you can't hide with you.
 - The Golem follows you and shoves away anyone from the mob who gets close, knocking them down for a few seconds. It's slow, so you can't just stand behind it. You can also leave it guarding an alley (G).
 - Get caught and you lose a life and run back to the synagogue.
-- Once everyone is on the boat, step onto the river gate yourself to win.
+- Once everyone is through the way out (the river gate, the forest path, the town gate), step onto it yourself to finish the chapter. The game remembers which chapters you've reached.
 
 ## Difficulty
 
@@ -56,7 +66,8 @@ Pick it on the start screen. The game remembers your choice until you close it.
 
 All the numbers are in `DIFFICULTY` at the top of `game/scripts/main.gd`.
 ![Outside the synagogue with the elder, who carries the Torah scroll](docs/neighbour.png)
-![Menorahs in the windows of the quarter](docs/street.png)
+![Chapter 2: landing below the mill](docs/mill-road.png)
+![Chapter 3: the forest](docs/forest.png)
 ![The river gate](docs/river.png)
 
 ## Changing the art
@@ -71,15 +82,16 @@ Every character and the tiles come from Sprite Studio files in `art-source/`.
 
 Save your redrawn `.sprite.json` back into `art-source/` too, so you can keep editing it later.
 
-## Changing the town
+## Changing the maps
 
-The whole town is the text file `game/levels/level1.txt`: one character per 16×16 tile. The legend at the bottom of the file lists them. Draw houses with `#` (the game adds the front walls), put `D` for doors (they all have a mezuzah), `w` for windows and `L` for windows with a Hanukkah menorah, `B` and `H` for hiding places, `N` and `E` for neighbours, digits for mob members and lowercase letters for their patrol points. The patrol routes are listed under `[patrols]`.
+Each chapter's map is a text file in `game/levels/` (`level1.txt`, `level2.txt`, `level3.txt`): one character per 16×16 tile. The legend at the bottom of the file lists them. Draw houses with `#` (the game adds the front walls), put `D` for doors (they all have a mezuzah), `w` for windows and `L` for windows with a Hanukkah menorah, `B`, `H` and `K` for hiding places (barrels, hay carts, bushes), `N` and `E` for neighbours hiding and `F` and `Q` for ones who start with you, `X` for the way out, digits for mob members and lowercase letters for their patrol points. The patrol routes are listed under `[patrols]`.
 
 ## How it's built
 
 | File | What it does |
 |---|---|
-| `game/scripts/main.gd` | Sets up the town and everyone in it; lives, rescues, winning and losing |
+| `game/scripts/main.gd` | Sets up a chapter and everyone in it; title and story screens, lives, rescues, finishing a chapter, saved progress |
+| `game/levels/chapters.json` | The story: each chapter's name, map, lighting, intro, goal and ending |
 | `game/scripts/level.gd` | Reads the text map, builds the tiles, walls and the path-finding grid |
 | `game/scripts/player.gd` | Moving, running, stamina, hiding |
 | `game/scripts/golem.gd` | Following, holding a spot, shoving |
@@ -90,7 +102,7 @@ The whole town is the text file `game/levels/level1.txt`: one character per 16×
 
 To make a new browser version, run `godot --headless --path . --export-release "Web" ../build/web/index.html` from the `game` folder (it needs Godot's export templates, from Editor → Manage Export Templates). The site copies it in with its `tools/update_golem.py`.
 
-`game/tests/playtest.gd` plays through the main rules automatically: patrols, calling a neighbour, getting caught, hiding, the Golem's shove, and winning. `game/tests/difficulty.gd` checks what changes between Easy, Normal and Hard. Run it from the `game` folder with `godot --headless --path . -s res://tests/playtest.gd`.
+`game/tests/playtest.gd` plays through the main rules automatically: patrols, calling a neighbour, getting caught, hiding, the Golem's shove, and winning. `game/tests/difficulty.gd` checks what changes between Easy, Normal and Hard, and `game/tests/chapters.gd` loads every chapter and plays it to the end. Run it from the `game` folder with `godot --headless --path . -s res://tests/playtest.gd`.
 
 ## Licence
 

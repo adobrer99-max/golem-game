@@ -1,8 +1,7 @@
 extends Node2D
-## Sets up the town, everyone in it, and the rules: get every neighbour to the river gate,
-## then go yourself. Three lives.
+## Runs one chapter: sets up the map and everyone in it, and the rules. Get every neighbour to the
+## way out, then go yourself. The story text for each chapter is in levels/chapters.json.
 
-const LEVEL := "res://levels/level1.txt"
 const SPRITES := {
 	"player": "res://art/player/player.tscn",
 	"golem": "res://art/golem/golem.tscn",
@@ -10,10 +9,11 @@ const SPRITES := {
 	"neighbour": "res://art/neighbour/neighbour.tscn",
 	"elder": "res://art/elder/elder.tscn",
 }
+const PROGRESS_FILE := "user://progress.cfg"
 
-# Easy is the first version of the game. Normal and Hard add three more patrols, and make the mob
-# see further, notice you faster, chase harder and check hiding places. The Golem shoves less often,
-# and when you're caught your neighbours scatter back to their doorways.
+# Easy is the first version of the game. Normal and Hard add more patrols (mobs 6 and up on the map),
+# and make the mob see further, notice you faster, chase harder and check hiding places. The Golem
+# shoves less often, and when you're caught your neighbours scatter back to where they hid.
 const DIFFICULTY := {
 	"Easy":   {"view": 92.0, "alert": 1.0, "chase": 64.0, "give_up": 2.5, "golem_rest": 1.0, "knockdown": 3.5, "lives": 3,
 		"scatter": false, "extra_mobs": false, "check_hiding": false, "hearing": 100.0, "stamina_drain": 0.45},
@@ -23,8 +23,14 @@ const DIFFICULTY := {
 		"scatter": true, "extra_mobs": true, "check_hiding": true, "hearing": 150.0, "stamina_drain": 0.7},
 }
 
-var difficulty: String = Engine.get_meta("golem_difficulty", "Normal")   # remembered across restarts
+# remembered while the game is open
+var difficulty: String = Engine.get_meta("golem_difficulty", "Normal")
+var chapter: int = Engine.get_meta("golem_chapter", 0)
 var diff: Dictionary
+var story: Dictionary
+var ch: Dictionary
+var unlocked := 0
+
 var level: Level
 var player: Player
 var golem: Golem
@@ -34,7 +40,7 @@ var followers: Array[Neighbour] = []
 var hud: Hud
 var light_texture: GradientTexture2D
 var cone_layer: CanvasLayer
-var state := "intro"     # intro, play, caught, won, lost
+var state := "title"     # title, intro, play, caught, won, lost
 var lives := 3
 var saved := 0
 var told_exit := false
@@ -42,31 +48,26 @@ var told_exit := false
 
 func _ready() -> void:
 	_setup_input()
+	story = load("res://levels/chapters.json").data
+	var cfg := ConfigFile.new()
+	if cfg.load(PROGRESS_FILE) == OK:
+		unlocked = cfg.get_value("progress", "unlocked", 0)
+	chapter = clampi(chapter, 0, story.chapters.size() - 1)
+	ch = story.chapters[chapter]
+	diff = DIFFICULTY[difficulty]
 	light_texture = _make_light_texture()
 	level = Level.new()
 	add_child(level)
-	level.load_map(LEVEL)
+	level.load_map("res://levels/" + ch.map)
 	level.build(load("res://art/tiles/tiles.png"))
 
 	var night := CanvasModulate.new()
-	night.color = Color(0.30, 0.32, 0.48)
+	night.color = Color(ch.night[0], ch.night[1], ch.night[2])
 	add_child(night)
 	for c in level.lit_windows:   # Hanukkah lights in the windows
-		var wl := PointLight2D.new()
-		wl.texture = light_texture
-		wl.color = Color(1, 0.78, 0.45)
-		wl.energy = 0.7
-		wl.texture_scale = 0.38
-		wl.position = level.center(c) + Vector2(0, 10)
-		add_child(wl)
-	for c in level.exits:   # lanterns at the river gate
-		var l := PointLight2D.new()
-		l.texture = light_texture
-		l.color = Color(1, 0.85, 0.5)
-		l.energy = 0.9
-		l.texture_scale = 0.9
-		l.position = level.center(c)
-		add_child(l)
+		_lamp(level.center(c) + Vector2(0, 10), Color(1, 0.78, 0.45), 0.7, 0.38)
+	for c in level.exits:         # lanterns at the way out
+		_lamp(level.center(c), Color(1, 0.85, 0.5), 0.9, 0.9)
 
 	cone_layer = CanvasLayer.new()
 	cone_layer.follow_viewport_enabled = true
@@ -79,9 +80,12 @@ func _ready() -> void:
 	golem = _spawn(Golem.new(), "golem", level.golem_start, actors, 7.0) as Golem
 	for n in level.neighbours:
 		var nb := _spawn(Neighbour.new(), n[1], n[0], actors) as Neighbour
+		nb.home = nb.global_position
 		if n[1] == "elder":
 			nb.speed = 50.0
 		neighbours.append(nb)
+		if n[2]:   # already with you at the start of the chapter
+			_follow(nb)
 	for id in level.mobs:
 		var m := _spawn(Mob.new(), "mob", level.mobs[id], actors) as Mob
 		m.start = m.global_position
@@ -96,21 +100,22 @@ func _ready() -> void:
 	if body:
 		body.area_entered.connect(_on_player_touched)
 
-	for nb in neighbours:
-		nb.home = nb.global_position
 	hud = Hud.new()
 	add_child(hud)
-	_show_intro()
+	if Engine.get_meta("golem_in_game", false):
+		_show_intro()
+	else:
+		_show_title()
 
 
-func _show_intro() -> void:
-	hud.show_screen("Golem",
-		"The third night of Hanukkah. A rumour has spread through the town, and a crowd with torches is moving on the Jewish quarter.\n\n" +
-		"Before he fled, the old rabbi woke the Golem. The elder has the synagogue's Torah scroll.\n" +
-		"Find your neighbours hiding in their doorways and lead them to the boat at the river gate.\n\n" +
-		"Stay out of the torchlight. Hide in barrels and hay carts. The Golem will hold them back, but it cannot be everywhere.\n\n" +
-		"Move  WASD / arrows      Run  Shift (they'll hear you)\nE  call a neighbour, hide      G  Golem: hold here / follow\n\n" +
-		"Difficulty:  %s     (press 1 Easy, 2 Normal, 3 Hard)\n\nPress Enter to begin" % difficulty)
+func _lamp(pos: Vector2, color: Color, energy: float, size: float) -> void:
+	var l := PointLight2D.new()
+	l.texture = light_texture
+	l.color = color
+	l.energy = energy
+	l.texture_scale = size
+	l.position = pos
+	add_child(l)
 
 
 func _spawn(a: Actor, sprite: String, cell: Vector2i, parent: Node, radius := 5.0) -> Actor:
@@ -137,7 +142,8 @@ func _make_light_texture() -> GradientTexture2D:
 func _setup_input() -> void:
 	var keys := {
 		"left": [KEY_A, KEY_LEFT], "right": [KEY_D, KEY_RIGHT], "up": [KEY_W, KEY_UP], "down": [KEY_S, KEY_DOWN],
-		"sprint": [KEY_SHIFT], "interact": [KEY_E, KEY_SPACE], "golem": [KEY_G], "confirm": [KEY_ENTER, KEY_KP_ENTER], "restart": [KEY_R],
+		"sprint": [KEY_SHIFT], "interact": [KEY_E, KEY_SPACE], "golem": [KEY_G], "confirm": [KEY_ENTER, KEY_KP_ENTER],
+		"restart": [KEY_R], "menu": [KEY_ESCAPE],
 	}
 	for action in keys:
 		if InputMap.has_action(action):
@@ -149,14 +155,55 @@ func _setup_input() -> void:
 			InputMap.action_add_event(action, ev)
 
 
+# ---------------------------------------------------------------- screens
+
+func _chapter_label(i: int) -> String:
+	return "Chapter %d: %s" % [i + 1, story.chapters[i].name]
+
+
+func _show_title() -> void:
+	state = "title"
+	var choose := "   (press C to change)" if unlocked > 0 else ""
+	hud.show_screen(story.title,
+		"A medieval Jewish adventure.\n\n" +
+		"%s%s\nDifficulty: %s   (press 1 Easy, 2 Normal, 3 Hard)\n\n" % [_chapter_label(chapter), choose, difficulty] +
+		"Move  WASD / arrows      Run  Shift (they'll hear you)\nE  call someone, hide      G  Golem: hold here / follow\n" +
+		"R  restart the chapter      Esc  back to this screen\n\nPress Enter to begin")
+
+
+func _show_intro() -> void:
+	state = "intro"
+	hud.show_screen(_chapter_label(chapter), ch.intro + "\n\nPress Enter to begin")
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("confirm") and state == "intro":
-		start()
-	elif state == "intro" and event is InputEventKey and event.pressed and not event.echo and event.physical_keycode in [KEY_1, KEY_2, KEY_3]:
-		difficulty = ["Easy", "Normal", "Hard"][event.physical_keycode - KEY_1]
-		Engine.set_meta("golem_difficulty", difficulty)
-		_show_intro()
-	elif event.is_action_pressed("restart") or (event.is_action_pressed("confirm") and state in ["won", "lost"]):
+	if event.is_action_pressed("confirm"):
+		match state:
+			"title":
+				Engine.set_meta("golem_in_game", true)
+				_show_intro()
+			"intro":
+				start()
+			"won":
+				_go_to_chapter(chapter + 1)
+			"ending":
+				Engine.set_meta("golem_in_game", false)
+				_go_to_chapter(0)
+			"lost":
+				get_tree().reload_current_scene()
+		return
+	if state == "title" and event is InputEventKey and event.pressed and not event.echo:
+		if event.physical_keycode in [KEY_1, KEY_2, KEY_3]:
+			difficulty = ["Easy", "Normal", "Hard"][event.physical_keycode - KEY_1]
+			Engine.set_meta("golem_difficulty", difficulty)
+			_show_title()
+		elif event.physical_keycode == KEY_C and unlocked > 0:
+			_go_to_chapter((chapter + 1) % (unlocked + 1))
+		return
+	if event.is_action_pressed("menu") and state != "title":
+		Engine.set_meta("golem_in_game", false)
+		get_tree().reload_current_scene()
+	elif event.is_action_pressed("restart") and state in ["play", "lost", "caught"]:
 		get_tree().reload_current_scene()
 	elif state == "play":
 		if event.is_action_pressed("interact"):
@@ -166,8 +213,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			hud.say("The Golem stands guard here." if golem.holding else "The Golem follows you.")
 
 
+func _go_to_chapter(i: int) -> void:
+	Engine.set_meta("golem_chapter", i)
+	get_tree().reload_current_scene()
+
+
 func start() -> void:
-	diff = DIFFICULTY[difficulty]
 	lives = diff.lives
 	for m in mobs.duplicate():
 		if not diff.extra_mobs and int(m.id) > 5:
@@ -185,8 +236,10 @@ func start() -> void:
 	player.stamina_drain = diff.stamina_drain
 	state = "play"
 	hud.hide_screen()
-	hud.say("Find your neighbours. Press E next to them.", 5.0)
+	hud.say(ch.goal, 6.0)
 
+
+# ---------------------------------------------------------------- play
 
 func _physics_process(_delta: float) -> void:
 	if state == "play" and player.sprinting:
@@ -199,10 +252,16 @@ func _physics_process(_delta: float) -> void:
 			win()
 		elif not told_exit and followers.is_empty():
 			told_exit = true
-			hud.say("You can't leave yet. Some of your neighbours are still hiding in the quarter.")
+			hud.say(ch.not_yet)
 	if not on_exit:
 		told_exit = false
-	hud.refresh(lives, diff.get("lives", 3), saved, neighbours.size(), followers.size(), golem.holding, player.stamina, player.in_hiding)
+	hud.refresh(lives, diff.lives, saved, neighbours.size(), followers.size(), golem.holding, player.stamina, player.in_hiding)
+
+
+func _follow(n: Neighbour) -> void:
+	n.state = Neighbour.S.FOLLOWING
+	n.leader = followers.back() if followers.size() > 0 else player
+	followers.append(n)
 
 
 func interact() -> void:
@@ -211,19 +270,18 @@ func interact() -> void:
 		return
 	for n in neighbours:
 		if n.state == Neighbour.S.HIDING and n.global_position.distance_to(player.global_position) < 30.0:
-			n.state = Neighbour.S.FOLLOWING
-			n.leader = followers.back() if followers.size() > 0 else player
-			followers.append(n)
-			hud.say("\"We have to go to the river.\" Your %s follows you." % ("elder" if n.speed < 60 else "neighbour"))
+			_follow(n)
+			var who := "elder" if n.speed < 60 else "neighbour"
+			hud.say(ch.found % who if "%s" in ch.found else ch.found)
 			return
 	var here := level.cell_of(player.global_position)
 	for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 		var c: Vector2i = here + d
 		if level.is_hiding_spot(c) and level.center(c).distance_to(player.global_position) < 22.0:
 			player.hide_in(level.spot(c))
-			hud.say("You hide. Wait for them to pass." + (" Your neighbours can't hide with you." if followers.size() > 0 else ""))
+			hud.say("You hide. Wait for them to pass." + (" The others can't hide with you." if followers.size() > 0 else ""))
 			return
-	hud.say("Nothing here. Barrels and hay carts are good places to hide.")
+	hud.say("Nothing here. Barrels, hay carts and bushes are good places to hide.")
 
 
 func nearest_exit(pos: Vector2) -> Vector2:
@@ -263,16 +321,16 @@ func player_caught(_by: Mob, why := "They caught you!") -> void:
 	lives -= 1
 	if lives <= 0:
 		state = "lost"
-		hud.show_screen("Caught", "They caught you too many times.\n\nPress Enter to try again.")
+		hud.show_screen("Caught", "They caught you too many times.\n\nPress Enter to try %s again." % _chapter_label(chapter))
 		return
 	state = "caught"
 	if diff.scatter and followers.size() > 0:
-		hud.say(why + " You break free, but your neighbours scatter back into hiding.", 4.0)
+		hud.say(why + " You break free, but the others scatter and hide.", 4.0)
 		for n in followers:
 			n.go_home()
 		followers.clear()
 	else:
-		hud.say(why + " You break free and run back to the synagogue.", 3.0)
+		hud.say(why + " You break free and run back to where you started.", 3.0)
 	await get_tree().create_timer(1.2).timeout
 	player.unhide()
 	player.global_position = level.spot(level.player_start)
@@ -297,12 +355,20 @@ func neighbour_saved(n: Neighbour) -> void:
 		followers[i].leader = player if i == 0 else followers[i - 1]
 	saved += 1
 	if saved == neighbours.size():
-		hud.say("Everyone is on the boat. Get to the river gate yourself!", 5.0)
+		hud.say("Everyone is through. Now you!", 5.0)
 	else:
 		var left := neighbours.size() - saved - followers.size()
-		hud.say("Safe on the boat. %d still to find." % left if left > 0 else "Safe on the boat. Bring the others with you to the gate.")
+		hud.say("Through. %d still to find." % left if left > 0 else "Through. Bring the others with you.")
 
 
 func win() -> void:
-	state = "won"
-	hud.show_screen("Across the river", "Everyone made it onto the boat. Behind you the Golem stands at the gate as the torches gather.\n\nDawn is coming.\n\nPress Enter to play again.")
+	unlocked = maxi(unlocked, mini(chapter + 1, story.chapters.size() - 1))
+	var cfg := ConfigFile.new()
+	cfg.set_value("progress", "unlocked", unlocked)
+	cfg.save(PROGRESS_FILE)
+	if chapter == story.chapters.size() - 1:
+		state = "ending"
+		hud.show_screen("The End", ch.outro + "\n\nThank you for playing.\n\nPress Enter to return to the title screen.")
+	else:
+		state = "won"
+		hud.show_screen(_chapter_label(chapter), ch.outro + "\n\nPress Enter to continue.")

@@ -5,18 +5,18 @@ extends Node2D
 
 const TILE := 16
 enum T { STREET, DIRT, GRASS, ROOF, HOUSE_WALL, DOOR, WINDOW, BARREL, HAY, WATER, DOCK, GATE,
-	STONE_TOP, STONE_FRONT, WELL, TREE, SYN_ROOF, SYN_WALL, CRATES, WINDOW_LIGHTS, SYN_STAR, SYN_MENORAH }
+	STONE_TOP, STONE_FRONT, WELL, TREE, SYN_ROOF, SYN_WALL, CRATES, WINDOW_LIGHTS, SYN_STAR, SYN_MENORAH, BUSH, WAY_OUT }
 const SOLID := [T.ROOF, T.HOUSE_WALL, T.DOOR, T.WINDOW, T.WATER, T.STONE_TOP, T.STONE_FRONT,
 	T.WELL, T.TREE, T.SYN_ROOF, T.SYN_WALL, T.CRATES, T.WINDOW_LIGHTS, T.SYN_STAR, T.SYN_MENORAH]
-const HIDING := [T.BARREL, T.HAY]
-const MARKERS := "PgNE123456789abcdefhijklmnopqrsuvxyz"
+const HIDING := [T.BARREL, T.HAY, T.BUSH]
+const MARKERS := "PgNEFQX123456789abcdefhijklmnopqrsuvxyz"
 
 var width := 0
 var height := 0
 var cells: Array = []                 # tile type for every cell, cells[y][x]
 var player_start := Vector2i.ZERO
 var golem_start := Vector2i.ZERO
-var neighbours: Array = []            # [cell, kind]
+var neighbours: Array = []            # [cell, kind, already with you]
 var mobs: Dictionary = {}             # "1" -> cell
 var points: Dictionary = {}           # "b" -> cell
 var patrols: Dictionary = {}          # "1" -> ["b", "c"]
@@ -52,8 +52,10 @@ func load_map(path: String) -> void:
 			match ch:
 				"P": player_start = cell
 				"g": golem_start = cell
-				"N": neighbours.append([cell, "neighbour"])
-				"E": neighbours.append([cell, "elder"])
+				"N": neighbours.append([cell, "neighbour", false])
+				"E": neighbours.append([cell, "elder", false])
+				"F": neighbours.append([cell, "neighbour", true])
+				"Q": neighbours.append([cell, "elder", true])
 				"X": exits.append(cell)
 				"L", "U": lit_windows.append(cell)
 			if ch.is_valid_int():
@@ -76,8 +78,14 @@ func _tile_for(ch: String, x: int, y: int, rows: Array[String]) -> int:
 		"\"": return T.GRASS
 		"~": return T.WATER
 		"=": return T.DOCK
-		"X": return T.GATE
+		"X":
+			# the way out: the river gate on a dock, a lantern on a path anywhere else
+			for d in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
+				if _ch(rows, x + d.x, y + d.y) == "=":
+					return T.GATE
+			return T.WAY_OUT
 		"B": return T.BARREL
+		"K": return T.BUSH
 		"H": return T.HAY
 		"C": return T.CRATES
 		"O": return T.WELL
@@ -90,7 +98,7 @@ func _tile_for(ch: String, x: int, y: int, rows: Array[String]) -> int:
 		"#": return T.ROOF if below in ["#", "D", "w", "L"] else T.HOUSE_WALL
 		"T": return T.SYN_ROOF if below in ["T", "D", "S", "U"] else T.SYN_WALL
 		"W": return T.STONE_TOP if below == "W" else T.STONE_FRONT
-	if ch != " " and ch in MARKERS:
+	if ch != " " and ch != "X" and ch in MARKERS:
 		# people and patrol points stand on whatever ground is around them
 		for d in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
 			var n := _ch(rows, x + d.x, y + d.y)

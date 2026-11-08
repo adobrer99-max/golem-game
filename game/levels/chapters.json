@@ -1,0 +1,35 @@
+{
+  "title": "Golem",
+  "chapters": [
+    {
+      "name": "The Quarter",
+      "map": "level1.txt",
+      "night": [0.30, 0.32, 0.48],
+      "intro": "The third night of Hanukkah. A rumour has spread through the town, and a crowd with torches is moving on the Jewish quarter.\n\nBefore he fled, the old rabbi woke the Golem. The elder has the synagogue's Torah scroll.\nFind your neighbours hiding in their doorways and lead them to the boat at the river gate.\n\nStay out of the torchlight. Hide in barrels and hay carts. The Golem will hold them back, but it cannot be everywhere.",
+      "goal": "Find your neighbours. Press E next to them.",
+      "not_yet": "You can't leave yet. Some of your neighbours are still hiding in the quarter.",
+      "found": "\"We have to go to the river.\" Your %s follows you.",
+      "outro": "The boat pushes off into the dark. Behind you, the Golem walks into the river without slowing, and the black water closes over its head.\n\nHalfway across, a shape rises beside the boat, streaming mud, and takes hold of the side to steady it."
+    },
+    {
+      "name": "The Mill Road",
+      "map": "level2.txt",
+      "night": [0.27, 0.30, 0.46],
+      "intro": "The boat can't go any further: the town watch is out on the bridge. You land below the old mill.\n\nBeyond the mill yard and the fields is the forest road. Men from the town are searching the farms with lanterns.\n\nKeep everyone together and get them to the trees. If they catch you, the others will scatter and hide, and you'll have to gather them again.",
+      "goal": "Lead everyone across the fields to the forest edge.",
+      "not_yet": "Not everyone is with you. Go back for them.",
+      "found": "You find them. Your %s comes with you again.",
+      "outro": "Under the trees, the noise of the town fades. Someone counts heads.\n\nOne is missing. Little Rivka let go of her mother's hand in the fields and ran into the forest."
+    },
+    {
+      "name": "The Forest",
+      "map": "level3.txt",
+      "night": [0.20, 0.23, 0.38],
+      "intro": "Rivka is somewhere in the forest, and searchers with torches are walking the road.\n\nFind her, then lead everyone to the gate of the next town, where the Jewish community has promised to take you in.\n\nThe paths are narrow. Hide in the bushes.",
+      "goal": "Find Rivka. Then lead everyone to the town gate.",
+      "not_yet": "You can't go in without Rivka.",
+      "found": "Rivka! She takes your hand and doesn't let go.",
+      "outro": "At first light the gate opens, and the community takes you in, Torah and all.\n\nThe Golem stops at the edge of the trees. You remember what the rabbi said: the word on its forehead is emet, truth. Wipe away the first letter and it reads met, dead.\n\nThe clay giant kneels so you can reach. When the sun is up, there is only a mound of river clay at the edge of the forest."
+    }
+  ]
+}

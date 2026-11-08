@@ -54,6 +54,7 @@ func _label(size: int, pos: Vector2, parent: Node = null) -> Label:
 
 
 func show_screen(t: String, b: String) -> void:
+	message_time = 0.0
 	info.visible = false
 	stamina_back.visible = false
 	stamina_bar.visible = false

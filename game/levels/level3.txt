@@ -1,0 +1,63 @@
+ttttttttttttttttttttttttttttttttttttttttttttttttttttttttWWWW
+ttttttttttttttttttttttttttttttttttttttttttttttttttttttttWWWW
+ttt""""tttttttttttttttttttttttttttttttttttttttttttttttttWWWW
+tt"""""""tttttttttttttttttttttttttttttttttttttttttttttttWWWW
+t"Q"P"g"""ttttttttttttttttttttttttttttttttt"""ttttttttttWWWW
+t""F"""""",ttttttttttttttttttttttttt""""""""""""ttttttttWWWW
+t""FF""""",,,,ttttttttttttttttttttt"2""""""""""bttttttttWWWW
+tt"""""""t,,,,,tttttttttttttttttttt""tttt""""""""tttttttWWWW
+ttt""""tttt"",K,,ttttttttttttttttt"""tttttt"""t"""ttttttWWWW
+ttttttttttt""t,,,,tttttttttttttttt"Ktttttttttttt"K"tttttWWWW
+ttttttttttt""ttt,,,,ttttttttttttt"""ttttttttttttt"""ttttWWWW
+tttttttttt"""tttt,,,,ttttttttttt"""ttttttttttttttt"""tttWWWW
+tttttttttt""ttttttt,,,,,,,,ttttt""ttttttttttttttttt"7"ttWWWW
+tttttttttt""tttttttt1,,,,,,K,,,a,"tttttttttttttttttt""ttWWWW
+ttttttttt"""tttttttt"""ttt,,,,,,,,,tttttttttttttttt"""ttWWWW
+ttttttttt""tttttttttt""ttttttttt,,,,ttttttttttttttt""tttWWWW
+ttttttttt""tttttttttt"K"tttttttttt,,,,ttttttttttttth"tttWWWW
+ttttttttt""ttttttttttt""ttttttttttt,,,""""ttttttttt"",i,WWWW
+ttttttttt""ttttttttttt""ttttttttttttt,""""""tttttt""",,,WWWW
+tttttttttK"ttttttttttt"""ttttttttttttt""4""",,,,,,,,,,,,XXWW
+tttttttt"""tttttttttt"""""""ttttttttttK""""",,,,,,,8,,,,XXWW
+tttttttt""tttttttttt"""""""""ttttttttt""""ttttttttd"t,,,WWWW
+tttttttt"5tttttttttt"""""6"""tttttttttttttttttttt"""t,j,WWWW
+tttttttt""tttttttttt"""""""""tttttttttttttttttttt"KtttttWWWW
+tttttttt"""tttttttttt""""""""ttttttttttttttttttt"""tttttWWWW
+tttttttt""""""tt"""t"""""""""""ttttttttttttttttt""ttttttWWWW
+tttttttt""""K"""""""""tttttt"K""ttttttttttttttt"""ttttttWWWW
+ttttttt"""ttt"""""f""ttttttttt""""tttttttttt"""""tttttttWWWW
+ttttttt""tttttt""""""tttttttttt""c""""tttt"""""""tttttttWWWW
+ttttttt""tttttt"""""ttttttttttttt"""""""""""""""""ttttttWWWW
+ttttttt"etttttttttttttttttttttttttttt""""K""""""""ttttttWWWW
+ttttKt"""tttttttttttttttttttttttttttttttt""""3""""ttttttWWWW
+ttt"""""""tttttttttttttttttttttttttttttttt"""""""tttttttWWWW
+tt"""""""""tttttttttttttttttttttttttttttttt"""""ttttttttWWWW
+tt"""""""""tttttttttttttttttttttttttttttttttttttttttttttWWWW
+tt"""N"""""tttttttttttttttttttttttttttttttttttttttttttttWWWW
+ttt"""""""ttttttttttttttttttttttttttttttttttttttttttttttWWWW
+ttttt"""ttttttttttttttttttttttttttttttttttttttttttttttttWWWW
+ttttttttttttttttttttttttttttttttttttttttttttttttttttttttWWWW
+ttttttttttttttttttttttttttttttttttttttttttttttttttttttttWWWW
+
+[patrols]
+# Each mob (a digit on the map) walks from where it starts through its lettered points in order,
+# then back to its start, and round again.
+1 = a
+2 = b
+3 = c
+4 = d
+5 = e
+6 = f
+7 = h
+8 = i j
+
+[legend]
+# .  street       ,  dirt road     "  grass          ~  river        =  dock
+# #  house        D  door          w  window          L  window with a Hanukkah menorah
+# T  synagogue    S  synagogue's star window        U  synagogue's menorah            W  wall
+# B  barrel       H  hay cart      K  bush            (hiding places: step in and press E)
+# C  crates       O  well          t  tree
+# X  the way out
+# P  you          g  the Golem
+# N  neighbour hiding (find them)   E  elder hiding   F  neighbour with you   Q  elder with you
+# 1-9  mobs (6 and up only on Normal and Hard)        other lowercase letters: patrol points
