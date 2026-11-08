@@ -2,7 +2,7 @@
 
 A top-down medieval Jewish adventure game made in Godot 4. On the third night of Hanukkah, a mob comes for the Jewish quarter of an invented town, and you and the Golem have to get your neighbours out to the boat at the river gate.
 
-**Status:** playable start to finish: a prologue, four chapters and two endings, placeholder art.
+**Status:** a prologue, four story chapters with two endings, and an open-world chapter. Placeholder art.
 
 ## The story
 
@@ -15,6 +15,9 @@ A top-down medieval Jewish adventure game made in Godot 4. On the third night of
    - **Flight (L):** gather the five families from their houses and get everyone across the marsh ford while more searchers keep arriving.
 
    Each choice has its own ending.
+5. **A New Life.** Years later, in a trading city downriver: an open world. Walk the city freely, meet the people of the Jewish street (Rivka is grown up; old Shmuel still keeps the Torah) and run errands for them: find a room, fetch ink for the scribe and flour for Shabbat, bring back Rivka's goat from the rough tavern streets, carry the community's tax to the town hall, and fetch the midwife in the middle of the night. A letter from downriver remembers what you chose in the village.
+   - By day the city is mostly safe. At night the watch patrols, and they'll throw you back into the Jewish street if they catch you outside it. The toughs in the tavern streets are dangerous at any hour. Getting caught isn't game over: you lose what you're carrying and wake up at home.
+   - An arrow points to your current errand. Sleep at Gitl's door in the evening to skip to morning. Progress is saved.
 
 All the story text, chapter names and goals are in `game/levels/chapters.json`. Edit it to change the story, or add a chapter by adding an entry and a map. A chapter can set who you play (`player`), what you overhear (`listen`) and what's said when you dig or come back early. A map with no `g` has no Golem. A chapter with a `choice` shows a choice screen, and each option can set its own mode (`defend` or `escape`), waves of arrivals, goal, intro and ending. The art is placeholder, made to be redrawn in [Sprite Studio](https://github.com/adobrer99-max/sprite-studio).
 
@@ -77,6 +80,8 @@ All the numbers are in `DIFFICULTY` at the top of `game/scripts/main.gd`.
 ![Chapter 3: the forest](docs/forest.png)
 ![Chapter 4: the choice](docs/choice.png)
 ![Fight: a house set alight](docs/fight.png)
+![A New Life: talking to Gitl in the Jewish street](docs/city-day.png)
+![A New Life: the watch at night](docs/city-night.png)
 ![The river gate](docs/river.png)
 
 ## Changing the art
@@ -91,6 +96,10 @@ Every character and the tiles come from Sprite Studio files in `art-source/`.
 
 Save your redrawn `.sprite.json` back into `art-source/` too, so you can keep editing it later.
 
+## Changing the city
+
+The people, their lines and the errands are all in `game/levels/city.json`. An errand is a list of steps: `get` an item at a spot, `receive` it from someone, `bring` it to someone, or `lead` someone (or a goat) to someone. Positions are map cells `[x, y]` in `game/levels/city.txt`.
+
 ## Changing the maps
 
 Each chapter's map is a text file in `game/levels/` (`level0.txt` for the prologue, then `level1.txt` to `level3.txt`): one character per 16×16 tile. The legend at the bottom of the file lists them. Draw houses with `#` (the game adds the front walls), put `D` for doors (they all have a mezuzah), `w` for windows and `L` for windows with a Hanukkah menorah, `B`, `H` and `K` for hiding places (barrels, hay carts, bushes), `N` and `E` for neighbours hiding and `F` and `Q` for ones who start with you, `X` for the way out, `Z` for a spot where plotters can be overheard, `Y` for river clay to dig, `V` for doors the mob can set alight and `A` for where the mob arrives, digits for mob members and lowercase letters for their patrol points. The patrol routes are listed under `[patrols]`.
@@ -101,6 +110,9 @@ Each chapter's map is a text file in `game/levels/` (`level0.txt` for the prolog
 |---|---|
 | `game/scripts/main.gd` | Sets up a chapter and everyone in it; title and story screens, lives, rescues, finishing a chapter, saved progress |
 | `game/levels/chapters.json` | The story: each chapter's name, map, lighting, intro, goal and ending |
+| `game/levels/city.json` | The open-world chapter: the people, what they say, their errands, day and night length |
+| `game/scripts/world.gd` | Runs the open world: conversations, errands, items, day and night, getting caught, saving |
+| `game/scripts/npc.gd` | Someone in the city you can talk to |
 | `game/scripts/level.gd` | Reads the text map, builds the tiles, walls and the path-finding grid |
 | `game/scripts/player.gd` | Moving, running, stamina, hiding |
 | `game/scripts/golem.gd` | Following, holding a spot, shoving |
@@ -111,7 +123,7 @@ Each chapter's map is a text file in `game/levels/` (`level0.txt` for the prolog
 
 To make a new browser version, run `godot --headless --path . --export-release "Web" ../build/web/index.html` from the `game` folder (it needs Godot's export templates, from Editor → Manage Export Templates). The site copies it in with its `tools/update_golem.py`.
 
-`game/tests/playtest.gd` plays through the main rules automatically: patrols, calling a neighbour, getting caught, hiding, the Golem's shove, and winning. `game/tests/difficulty.gd` checks what changes between Easy, Normal and Hard, `game/tests/chapters.gd` loads every chapter and plays it to the end, and `game/tests/village.gd` checks the Fight/Flight choice and both paths. Run it from the `game` folder with `godot --headless --path . -s res://tests/playtest.gd`.
+`game/tests/playtest.gd` plays through the main rules automatically: patrols, calling a neighbour, getting caught, hiding, the Golem's shove, and winning. `game/tests/difficulty.gd` checks what changes between Easy, Normal and Hard, `game/tests/chapters.gd` loads every chapter and plays it to the end, `game/tests/village.gd` checks the Fight/Flight choice and both paths, and `game/tests/city.gd` runs every errand in the city, the night rules, getting caught, sleeping and saving. Run it from the `game` folder with `godot --headless --path . -s res://tests/playtest.gd`.
 
 ## Licence
 

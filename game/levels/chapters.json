@@ -140,6 +140,22 @@
           }
         ]
       }
+    },
+    {
+      "name": "A New Life",
+      "map": "city.txt",
+      "world": "res://levels/city.json",
+      "night": [
+        0.95,
+        0.92,
+        0.85
+      ],
+      "intro_by_choice": {
+        "F": "Years later. The village still stands, but it was never quite the same after that night, and in the end you left it for the city downriver.",
+        "L": "Years later. The families who crossed the marsh scattered to new places, and you came down the river to the city."
+      },
+      "intro": "It's a trading city, with a wall, a river port, a market, and a Jewish street with its own gate. Old Shmuel is here, with the Torah from the quarter. So is Rivka, grown up now.\n\nYou don't know anyone else yet. Talk to people (E). Those with a ! over their head have something for you to do.\n\nBy day the city is mostly safe. At night the watch walks the streets, and a Jew caught outside the Jewish street after dark gets thrown back in. The tavern streets on the west side are rough at any hour.\n\nThere's no last page to this one. Live here.",
+      "goal": "Talk to people. Gitl, by the synagogue, has a room to rent."
     }
   ]
 }

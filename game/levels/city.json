@@ -1,0 +1,100 @@
+{
+  "_about": "The open-world chapter: who lives in the city, what they say, and the errands they give you. Positions are map cells [x, y] in levels/city.txt (count from 0, top left).",
+  "start_hour": 0.12,
+  "day_seconds": 210,
+  "night_seconds": 120,
+  "safe_area": [68, 16, 89, 46],
+  "safe_area_name": "the Jewish street",
+  "start_home": [76, 23],
+  "mobs": {
+    "1": "watch", "2": "watch", "3": "watch", "4": "watch", "5": "watch",
+    "6": "tough", "7": "tough", "8": "tough"
+  },
+  "caught": {
+    "watch": "The watch catches you outside the Jewish street after dark. They march you back through the gate and slam it behind you.",
+    "tough": "Toughs from the taverns knock you down and go through your pockets. You limp home."
+  },
+  "npcs": {
+    "widow":     {"name": "Gitl", "sprite": "widow", "at": [86, 22], "lines": ["\"The room upstairs is yours as long as you need it.\""], "lines_before_home": ["\"A new face! Looking for somewhere to sleep?\""]},
+    "scribe":    {"name": "Menachem the scribe", "sprite": "scribe", "at": [71, 30], "lines": ["\"Every letter has to be perfect, or the whole scroll is unfit. Slowly, slowly.\""]},
+    "baker":     {"name": "Dvora the baker", "sprite": "baker", "at": [81, 30], "lines": ["\"Challah on Friday, matzah at Passover, and in between, whatever people can pay for.\""]},
+    "elder":     {"name": "Old Shmuel", "sprite": "elder", "at": [71, 40], "lines": ["\"The Torah we carried out of the quarter is in the ark here now. We read from it every Shabbat.\""]},
+    "parnas":    {"name": "Reb Yosef, the parnas", "sprite": "parnas", "at": [82, 40], "lines": ["\"The council keeps our charter. Without it, we live here at the bishop's pleasure.\""]},
+    "rivka":     {"name": "Rivka", "sprite": "rivka", "at": [79, 23], "lines": ["\"Remember the forest? I still dream about the torches. Then I wake up, and I'm here.\""]},
+    "merchant":  {"name": "Don Abraham, a merchant", "sprite": "merchant", "at": [52, 55], "lines": ["\"Pepper from Venice, oak galls from the east, paper from Toledo. Everything comes up this river.\""]},
+    "boatman":   {"name": "Klaus the boatman", "sprite": "boatman", "at": [29, 59], "lines": ["\"Mind the planks. Half of them are older than me.\""]},
+    "treasurer": {"name": "The town treasurer", "sprite": "treasurer", "at": [48, 24], "lines": ["\"The Jews' tax is due by the end of the month. Every month.\""]},
+    "midwife":   {"name": "Sarah the midwife", "sprite": "midwife", "at": [12, 54], "lines": ["\"Babies don't wait for daylight. Neither do I.\""]}
+  },
+  "followers": {
+    "goat": {"sprite": "goat", "at": [12, 38]}
+  },
+  "quests": [
+    {
+      "id": "room", "title": "A Roof Over Your Head", "giver": "widow",
+      "offer": ["\"You must be one of the ones from the village. Everybody's talking about you.\"", "\"I have a room. Bring me a bucket of water from the well, and we'll call it the first week's rent.\""],
+      "steps": [
+        {"do": "get", "item": "bucket", "at": [77, 33], "text": "Fill a bucket at the well in the Jewish street"},
+        {"do": "bring", "item": "bucket", "to": "widow", "text": "Bring the water to Gitl", "lines": ["\"Good. Up the stairs, second door. Sleep here whenever you like.\""]}
+      ],
+      "reward": "You have a home. Press E at Gitl's door in the evening or at night to sleep until morning.", "unlocks": "home"
+    },
+    {
+      "id": "ink", "title": "Ink for the Scribe", "giver": "scribe", "requires": ["room"],
+      "offer": ["\"You have young legs. Mine are seventy years old.\"", "\"I'm writing a new Torah scroll, and I've run out of oak galls for the ink. Don Abraham at the river port sells the best ones.\""],
+      "steps": [
+        {"do": "receive", "item": "galls", "from": "merchant", "text": "Get oak galls from Don Abraham at the port", "lines": ["\"For Menachem? Take them. He wrote my wedding contract.\""]},
+        {"do": "bring", "item": "galls", "to": "scribe", "text": "Bring the oak galls to Menachem", "lines": ["\"Ah, these are fine. Crushed, soaked, a little vitriol and gum. Come back in a year and the scroll will be finished.\""]}
+      ],
+      "reward": "Menachem will tell everyone you can be trusted."
+    },
+    {
+      "id": "flour", "title": "Flour for Shabbat", "giver": "baker", "requires": ["room"],
+      "offer": ["\"The miller hasn't brought my flour, and Shabbat is the day after tomorrow.\"", "\"The mill is outside the north gate. Fetch me a sack, and be back before they close the gates at dark.\""],
+      "steps": [
+        {"do": "get", "item": "flour", "at": [18, 6], "text": "Fetch a sack of flour from the mill outside the north gate"},
+        {"do": "bring", "item": "flour", "to": "baker", "text": "Bring the flour to Dvora", "lines": ["\"Bless you. There'll be a challah with your name on it.\""]}
+      ],
+      "reward": "Dvora will keep you fed."
+    },
+    {
+      "id": "goat", "title": "Rivka's Goat", "giver": "rivka", "requires": ["room"],
+      "offer": ["\"My goat got out again. Someone saw her wander off toward the taverns on the west side.\"", "\"Be careful. The men who drink there don't like us.\""],
+      "steps": [
+        {"do": "lead", "who": "goat", "to": "rivka", "text": "Find Rivka's goat in the tavern streets (west) and lead her home", "lines": ["\"There you are! Thank you. Don't tell anyone how many times she's done this.\""]}
+      ],
+      "reward": "Rivka owes you one."
+    },
+    {
+      "id": "letter", "title": "A Letter from the Old Country", "giver": "boatman", "requires": ["ink"],
+      "offer": ["\"You're the one from the village up the valley? A man downriver gave me this for your people.\""],
+      "steps": [
+        {"do": "receive", "item": "letter", "from": "boatman", "text": "Take the letter from Klaus", "lines": ["\"Here. It's been wet once or twice, sorry.\""]},
+        {"do": "bring", "item": "letter", "to": "elder", "text": "Bring the letter to old Shmuel", "lines": "letter_lines"}
+      ],
+      "reward": "News from the past."
+    },
+    {
+      "id": "tax", "title": "The Community's Tax", "giver": "parnas", "requires": ["letter"],
+      "offer": ["\"The month's tax is due. I'd go myself, but my knees are worse than my debts.\"", "\"Take this purse to the treasurer at the town hall. All of it. In daylight, mind.\""],
+      "steps": [
+        {"do": "receive", "item": "purse", "from": "parnas", "text": "Take the purse from Reb Yosef", "lines": ["\"Count it if you like. Twelve marks of silver.\""]},
+        {"do": "bring", "item": "purse", "to": "treasurer", "text": "Carry the purse to the treasurer at the town hall", "lines": ["\"Twelve marks. Paid in full.\" He writes it in his book without looking up."]}
+      ],
+      "reward": "The charter holds for another month."
+    },
+    {
+      "id": "midwife", "title": "In the Middle of the Night", "giver": "baker", "requires": ["flour"], "night_only": true,
+      "offer": ["\"Thank God, you're awake! My daughter's time has come, and the midwife lives down by the port.\"", "\"The watch will be out. Please hurry.\""],
+      "steps": [
+        {"do": "lead", "who": "midwife", "to": "baker", "text": "Bring Sarah the midwife from the port to the bakery", "lines": ["Hours later, a baby cries in the room above the bakery. Dvora comes down with flour in her hair and tears on her face.", "\"A girl. We're calling her Chava. Life.\""]}
+      ],
+      "reward": "A new life in the Jewish street."
+    }
+  ],
+  "letter_lines": {
+    "F": ["Shmuel reads it twice. \"From the village. They're rebuilding. The gate is new, and nobody has touched the mound of clay on the road. The children won't go near it.\"", "\"You did what you had to.\""],
+    "L": ["Shmuel reads it twice. \"From across the marsh. Fishermen found the ford blocked with clay, packed hard as stone. Nobody could cross for a week.\"", "\"It held the way for longer than any of us knew.\""]
+  },
+  "all_done": "Everyone on the Jewish street knows your name now. This is home."
+}

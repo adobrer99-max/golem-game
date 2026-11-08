@@ -20,6 +20,7 @@ var checks_hiding_spots := false
 var id := ""
 var arrival := ""              # "" for patrols; "torch" goes for the houses (Fight); "roam" searches the lanes (Flight)
 var target_door := Vector2i(-1, -1)
+var night_only := false        # the city watch: harmless by day, on the lookout at night
 var flee_to := Vector2.ZERO
 
 var state := S.PATROL
@@ -88,6 +89,24 @@ func _physics_process(delta: float) -> void:
 		_update_cone()
 		return
 
+	if night_only and not main.is_night():
+		# daytime: just walking the rounds
+		alert = 0.0
+		if state != S.PATROL:
+			state = S.PATROL
+		var target: Vector2 = route[route_i] if route.size() > 0 else start
+		if global_position.distance_to(target) < 4.0:
+			route_i = (route_i + 1) % maxi(1, route.size())
+			repath = 0.0
+		if repath <= 0.0 or path_i >= path.size():
+			go_to(target)
+			repath = 1.0
+		animate(move_along(PATROL_SPEED))
+		cone.visible = false
+		mark.text = ""
+		torch.visible = false
+		return
+	torch.visible = true
 	if state == S.FLEE:
 		var moving_off := move_along(CHASE_SPEED_FLEE)
 		animate(moving_off)
@@ -206,6 +225,8 @@ func can_see(player: Player) -> bool:
 	var d := eye.distance_to(to)
 	if d > view:
 		return false
+	if main.world and main.world.is_safe(player.global_position):
+		return false   # they don't come into the Jewish street
 	if player.in_hiding:
 		# hiding only works if they didn't watch you climb in
 		return state == S.CHASE and d < 28.0

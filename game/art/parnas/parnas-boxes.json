@@ -1,0 +1,289 @@
+{
+  "image": "parnas-sheet.png",
+  "frameWidth": 16,
+  "frameHeight": 16,
+  "columns": 4,
+  "rows": 6,
+  "origin": {
+    "x": 8,
+    "y": 15
+  },
+  "animations": {
+    "idle_down": {
+      "fps": 2,
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 16,
+          "h": 16,
+          "durationMs": 500,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        }
+      ]
+    },
+    "walk_down": {
+      "fps": 8,
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 16,
+          "w": 16,
+          "h": 16,
+          "durationMs": 125,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        },
+        {
+          "x": 16,
+          "y": 16,
+          "w": 16,
+          "h": 16,
+          "durationMs": 125,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        },
+        {
+          "x": 32,
+          "y": 16,
+          "w": 16,
+          "h": 16,
+          "durationMs": 125,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        },
+        {
+          "x": 48,
+          "y": 16,
+          "w": 16,
+          "h": 16,
+          "durationMs": 125,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        }
+      ]
+    },
+    "idle_up": {
+      "fps": 2,
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 32,
+          "w": 16,
+          "h": 16,
+          "durationMs": 500,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        }
+      ]
+    },
+    "walk_up": {
+      "fps": 8,
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 48,
+          "w": 16,
+          "h": 16,
+          "durationMs": 125,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        },
+        {
+          "x": 16,
+          "y": 48,
+          "w": 16,
+          "h": 16,
+          "durationMs": 125,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        },
+        {
+          "x": 32,
+          "y": 48,
+          "w": 16,
+          "h": 16,
+          "durationMs": 125,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        },
+        {
+          "x": 48,
+          "y": 48,
+          "w": 16,
+          "h": 16,
+          "durationMs": 125,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        }
+      ]
+    },
+    "idle_side": {
+      "fps": 2,
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 64,
+          "w": 16,
+          "h": 16,
+          "durationMs": 500,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        }
+      ]
+    },
+    "walk_side": {
+      "fps": 8,
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 80,
+          "w": 16,
+          "h": 16,
+          "durationMs": 125,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        },
+        {
+          "x": 16,
+          "y": 80,
+          "w": 16,
+          "h": 16,
+          "durationMs": 125,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        },
+        {
+          "x": 32,
+          "y": 80,
+          "w": 16,
+          "h": 16,
+          "durationMs": 125,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        },
+        {
+          "x": 48,
+          "y": 80,
+          "w": 16,
+          "h": 16,
+          "durationMs": 125,
+          "boxes": [
+            {
+              "kind": "body",
+              "x": 4,
+              "y": 8,
+              "w": 8,
+              "h": 8
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

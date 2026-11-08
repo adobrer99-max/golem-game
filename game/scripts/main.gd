@@ -10,6 +10,8 @@ const SPRITES := {
 	"elder": "res://art/elder/elder.tscn",
 	"rabbi": "res://art/rabbi/rabbi.tscn",
 }
+# the people of the city: res://art/<name>/<name>.tscn
+const TOWNSFOLK := ["widow", "scribe", "baker", "midwife", "boatman", "merchant", "parnas", "rivka", "thug", "watchman", "treasurer", "goat"]
 const PROGRESS_FILE := "user://progress.cfg"
 
 # Easy is the first version of the game. Normal and Hard add more patrols (mobs 6 and up on the map),
@@ -64,6 +66,9 @@ var wave_pause := 0.0
 # Fight: doors being set alight. cell -> {"heat": 0..1, "burning": bool, "burn": seconds, "lost": bool, "fire": Node2D}
 var fires: Dictionary = {}
 var houses_lost := 0
+# the open-world chapter
+var world: World
+var night_tint: CanvasModulate
 
 
 func _ready() -> void:
@@ -91,9 +96,9 @@ func _ready() -> void:
 	level.load_map("res://levels/" + ch.map)
 	level.build(load("res://art/tiles/tiles.png"))
 
-	var night := CanvasModulate.new()
-	night.color = Color(ch.night[0], ch.night[1], ch.night[2])
-	add_child(night)
+	night_tint = CanvasModulate.new()
+	night_tint.color = Color(ch.night[0], ch.night[1], ch.night[2])
+	add_child(night_tint)
 	for c in level.lit_windows:   # Hanukkah lights in the windows
 		_lamp(level.center(c) + Vector2(0, 10), Color(1, 0.78, 0.45), 0.7, 0.38)
 	for c in level.exits:         # lanterns at the way out
@@ -119,8 +124,11 @@ func _ready() -> void:
 		neighbours.append(nb)
 		if n[2]:   # already with you at the start of the chapter
 			_follow(nb)
+	var world_data: Dictionary = load(ch.world).data if ch.has("world") else {}
 	for id in level.mobs:
-		var m := _spawn(Mob.new(), "mob", level.mobs[id], actors) as Mob
+		var kind: String = world_data.get("mobs", {}).get(id, "")
+		var m := _spawn(Mob.new(), {"watch": "watchman", "tough": "thug"}.get(kind, "mob"), level.mobs[id], actors) as Mob
+		m.night_only = kind == "watch"
 		m.start = m.global_position
 		m.id = id
 		for p in level.patrols.get(id, []):
@@ -129,6 +137,10 @@ func _ready() -> void:
 		m.route.append(m.start)
 		m.facing = Vector2.RIGHT
 		mobs.append(m)
+	if not world_data.is_empty():
+		world = World.new()
+		add_child(world)
+		world.setup(self, world_data, Engine.get_meta("golem_village_choice", _saved_choice()))
 	var body := player.body_area()
 	if body:
 		body.area_entered.connect(_on_player_touched)
@@ -155,7 +167,8 @@ func _lamp(pos: Vector2, color: Color, energy: float, size: float) -> void:
 
 func _spawn(a: Actor, sprite: String, cell: Vector2i, parent: Node, radius := 5.0) -> Actor:
 	a.position = level.spot(cell)
-	a.setup(self, load(SPRITES[sprite]), radius)
+	var path: String = SPRITES.get(sprite, "res://art/%s/%s.tscn" % [sprite, sprite])
+	a.setup(self, load(path), radius)
 	parent.add_child(a)
 	return a
 
@@ -213,9 +226,21 @@ func _show_title() -> void:
 		"R  restart the chapter      Esc  back to this screen\n\nPress Enter to begin")
 
 
+func _saved_choice() -> String:
+	var cfg := ConfigFile.new()
+	return cfg.get_value("progress", "village_choice", "L") if cfg.load(PROGRESS_FILE) == OK else "L"
+
+
+func is_night() -> bool:
+	return world.night if world else true
+
+
 func _show_intro() -> void:
 	state = "intro"
-	hud.show_screen(_chapter_label(chapter), ch.intro + ("\n\nPress Enter to choose" if choosing else "\n\nPress Enter to begin"))
+	var intro: String = ch.intro
+	if ch.has("intro_by_choice"):
+		intro = ch.intro_by_choice.get(_saved_choice(), intro) + "\n\n" + intro
+	hud.show_screen(_chapter_label(chapter), intro + ("\n\nPress Enter to choose" if choosing else "\n\nPress Enter to begin"))
 
 
 func _show_choice() -> void:
@@ -227,6 +252,10 @@ func _show_choice() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if state == "talk":
+		if event.is_action_pressed("interact") or event.is_action_pressed("confirm"):
+			world.next_line()
+		return
 	if event.is_action_pressed("confirm"):
 		match state:
 			"title":
@@ -282,7 +311,7 @@ func _go_to_chapter(i: int) -> void:
 func start() -> void:
 	lives = diff.lives
 	for m in mobs.duplicate():
-		if not diff.extra_mobs and int(m.id) > 5:
+		if not diff.extra_mobs and int(m.id) > 5 and not world:
 			mobs.erase(m)
 			m.cone.queue_free()
 			m.queue_free()
@@ -314,12 +343,15 @@ func _physics_process(_delta: float) -> void:
 		for m in mobs:
 			if m.global_position.distance_to(player.global_position) < diff.hearing:
 				m.hear(player.global_position)
+	if world:
+		world.process(_delta)
+		hud.point_at(world.target(), get_viewport().get_canvas_transform())
 	if state == "play":
 		_listen(_delta)
 		_run_waves(_delta)
 		_burn(_delta)
 	var on_exit := level.is_exit(level.cell_of(player.global_position))
-	if state == "play" and on_exit and mode != "defend":
+	if state == "play" and on_exit and mode != "defend" and not world:
 		if saved == neighbours.size() and tasks_done():
 			win()
 		elif not told_exit and followers.is_empty():
@@ -327,7 +359,7 @@ func _physics_process(_delta: float) -> void:
 			hud.say(ch.get("not_yet", "Not everyone is here yet."))
 	if not on_exit:
 		told_exit = false
-	hud.refresh(lives, diff.get("lives", 3), _hud_lines(), player.stamina, player.in_hiding)
+	hud.refresh(lives, 0 if world else diff.get("lives", 3), _hud_lines(), player.stamina, player.in_hiding)
 
 
 # ---------------------------------------------------------------- arrivals and fires
@@ -480,6 +512,8 @@ func tasks_done() -> bool:
 
 func _hud_lines() -> Array:
 	var lines := []
+	if world:
+		return world.hud_lines()
 	if mode == "defend":
 		var on_fire := fires.values().filter(func(f): return f.burning).size()
 		lines.append("Wave  %d / %d" % [mini(wave + (1 if to_spawn > 0 or not mobs.is_empty() else 0), waves.size()), waves.size()])
@@ -532,6 +566,8 @@ func interact() -> void:
 		player.unhide()
 		return
 	if _put_out_fire():
+		return
+	if world and world.interact():
 		return
 	for n in neighbours:
 		if n.state == Neighbour.S.HIDING and n.global_position.distance_to(player.global_position) < 30.0:
@@ -591,6 +627,9 @@ func _on_player_touched(area: Area2D) -> void:
 func player_caught(_by: Mob, why := "They caught you!") -> void:
 	if state != "play" or player.safe_time > 0.0:
 		return
+	if world:
+		world.caught(_by)
+		return
 	lives -= 1
 	if lives <= 0:
 		state = "lost"
@@ -640,6 +679,9 @@ func win() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("progress", "unlocked", unlocked)
 	cfg.save(PROGRESS_FILE)
+	if ch.has("mode") and ch.has("key"):   # remember what you chose in the village, for later chapters
+		cfg.set_value("progress", "village_choice", ch.key)
+		cfg.save(PROGRESS_FILE)
 	Engine.set_meta("golem_choice", "")
 	if chapter == story.chapters.size() - 1:
 		state = "ending"

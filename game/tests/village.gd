@@ -8,7 +8,11 @@ func frames(n: int) -> void:
 
 func load_village(choice: String):
 	var story = load("res://levels/chapters.json").data
-	Engine.set_meta("golem_chapter", story.chapters.size() - 1)
+	var i := 0
+	for j in story.chapters.size():
+		if story.chapters[j].has("choice"):
+			i = j
+	Engine.set_meta("golem_chapter", i)
 	Engine.set_meta("golem_in_game", true)
 	Engine.set_meta("golem_choice", choice)
 	Engine.set_meta("golem_difficulty", "Normal")
