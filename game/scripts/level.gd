@@ -5,9 +5,9 @@ extends Node2D
 
 const TILE := 16
 enum T { STREET, DIRT, GRASS, ROOF, HOUSE_WALL, DOOR, WINDOW, BARREL, HAY, WATER, DOCK, GATE,
-	STONE_TOP, STONE_FRONT, WELL, TREE, SYN_ROOF, SYN_WALL, CRATES }
+	STONE_TOP, STONE_FRONT, WELL, TREE, SYN_ROOF, SYN_WALL, CRATES, WINDOW_LIGHTS, SYN_STAR, SYN_MENORAH }
 const SOLID := [T.ROOF, T.HOUSE_WALL, T.DOOR, T.WINDOW, T.WATER, T.STONE_TOP, T.STONE_FRONT,
-	T.WELL, T.TREE, T.SYN_ROOF, T.SYN_WALL, T.CRATES]
+	T.WELL, T.TREE, T.SYN_ROOF, T.SYN_WALL, T.CRATES, T.WINDOW_LIGHTS, T.SYN_STAR, T.SYN_MENORAH]
 const HIDING := [T.BARREL, T.HAY]
 const MARKERS := "PgNE123456789abcdefhijklmnopqrsuvxyz"
 
@@ -21,6 +21,7 @@ var mobs: Dictionary = {}             # "1" -> cell
 var points: Dictionary = {}           # "b" -> cell
 var patrols: Dictionary = {}          # "1" -> ["b", "c"]
 var exits: Array[Vector2i] = []
+var lit_windows: Array[Vector2i] = []   # windows with a Hanukkah menorah (L), which glow at night
 var astar := AStarGrid2D.new()
 var tilemap: TileMapLayer
 
@@ -54,6 +55,7 @@ func load_map(path: String) -> void:
 				"N": neighbours.append([cell, "neighbour"])
 				"E": neighbours.append([cell, "elder"])
 				"X": exits.append(cell)
+				"L", "U": lit_windows.append(cell)
 			if ch.is_valid_int():
 				mobs[ch] = cell
 			elif ch in "abcdefhijklmnopqrsuvxyz":
@@ -82,8 +84,11 @@ func _tile_for(ch: String, x: int, y: int, rows: Array[String]) -> int:
 		"t": return T.TREE
 		"D": return T.DOOR
 		"w": return T.WINDOW
-		"#": return T.ROOF if below in ["#", "D", "w"] else T.HOUSE_WALL
-		"T": return T.SYN_ROOF if below in ["T", "D"] else T.SYN_WALL
+		"L": return T.WINDOW_LIGHTS
+		"S": return T.SYN_STAR
+		"U": return T.SYN_MENORAH
+		"#": return T.ROOF if below in ["#", "D", "w", "L"] else T.HOUSE_WALL
+		"T": return T.SYN_ROOF if below in ["T", "D", "S", "U"] else T.SYN_WALL
 		"W": return T.STONE_TOP if below == "W" else T.STONE_FRONT
 	if ch != " " and ch in MARKERS:
 		# people and patrol points stand on whatever ground is around them

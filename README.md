@@ -1,6 +1,6 @@
 # Golem (working title)
 
-A top-down medieval Jewish adventure game made in Godot 4. On the night a mob comes for the Jewish quarter of an invented town, you and the Golem have to get your neighbours out to the boat at the river gate.
+A top-down medieval Jewish adventure game made in Godot 4. On the third night of Hanukkah, a mob comes for the Jewish quarter of an invented town, and you and the Golem have to get your neighbours out to the boat at the river gate.
 
 **Status:** first playable version. One town, four neighbours to rescue, and up to eight torch-carrying mob members on patrol. The art is placeholder, made to be redrawn in [Sprite Studio](https://github.com/adobrer99-max/sprite-studio).
 
@@ -55,7 +55,8 @@ Pick it on the start screen. The game remembers your choice until you close it.
 | Lives | 3 | 3 | 2 |
 
 All the numbers are in `DIFFICULTY` at the top of `game/scripts/main.gd`.
-![Leading a neighbour while the Golem holds back the mob](docs/neighbour.png)
+![Outside the synagogue with the elder, who carries the Torah scroll](docs/neighbour.png)
+![Menorahs in the windows of the quarter](docs/street.png)
 ![The river gate](docs/river.png)
 
 ## Changing the art
@@ -72,7 +73,7 @@ Save your redrawn `.sprite.json` back into `art-source/` too, so you can keep ed
 
 ## Changing the town
 
-The whole town is the text file `game/levels/level1.txt`: one character per 16×16 tile. The legend at the bottom of the file lists them. Draw houses with `#` (the game adds the front walls), put `D` for doors and `w` for windows, `B` and `H` for hiding places, `N` and `E` for neighbours, digits for mob members and lowercase letters for their patrol points. The patrol routes are listed under `[patrols]`.
+The whole town is the text file `game/levels/level1.txt`: one character per 16×16 tile. The legend at the bottom of the file lists them. Draw houses with `#` (the game adds the front walls), put `D` for doors (they all have a mezuzah), `w` for windows and `L` for windows with a Hanukkah menorah, `B` and `H` for hiding places, `N` and `E` for neighbours, digits for mob members and lowercase letters for their patrol points. The patrol routes are listed under `[patrols]`.
 
 ## How it's built
 

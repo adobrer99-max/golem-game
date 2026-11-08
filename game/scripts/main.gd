@@ -51,6 +51,14 @@ func _ready() -> void:
 	var night := CanvasModulate.new()
 	night.color = Color(0.30, 0.32, 0.48)
 	add_child(night)
+	for c in level.lit_windows:   # Hanukkah lights in the windows
+		var wl := PointLight2D.new()
+		wl.texture = light_texture
+		wl.color = Color(1, 0.78, 0.45)
+		wl.energy = 0.7
+		wl.texture_scale = 0.38
+		wl.position = level.center(c) + Vector2(0, 10)
+		add_child(wl)
 	for c in level.exits:   # lanterns at the river gate
 		var l := PointLight2D.new()
 		l.texture = light_texture
@@ -97,8 +105,8 @@ func _ready() -> void:
 
 func _show_intro() -> void:
 	hud.show_screen("Golem",
-		"Night. A rumour has spread through the town, and a crowd with torches is moving on the Jewish quarter.\n\n" +
-		"Before he fled, the old rabbi woke the Golem.\n" +
+		"The third night of Hanukkah. A rumour has spread through the town, and a crowd with torches is moving on the Jewish quarter.\n\n" +
+		"Before he fled, the old rabbi woke the Golem. The elder has the synagogue's Torah scroll.\n" +
 		"Find your neighbours hiding in their doorways and lead them to the boat at the river gate.\n\n" +
 		"Stay out of the torchlight. Hide in barrels and hay carts. The Golem will hold them back, but it cannot be everywhere.\n\n" +
 		"Move  WASD / arrows      Run  Shift (they'll hear you)\nE  call a neighbour, hide      G  Golem: hold here / follow\n\n" +
